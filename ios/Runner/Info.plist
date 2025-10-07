@@ -4,6 +4,10 @@
 <dict>
 <!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
 <!-- Google Sign-in Section -->
+<key>GIDClientID</key>
+    <string>1015427928595-fgf3ep8cocped3tk66oebhchvrdkbp2n</string>
+
+
 <key>CFBundleURLTypes</key>
 <array>
 	<dict>
@@ -13,7 +17,7 @@
 		<array>
 			<!-- TODO Replace this value: -->
 			<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-			<string>com.googleusercontent.apps.861823949799-vc35cprkp249096uujjn0vvnmcvjppkn</string>
+			<string>com.googleusercontent.apps.1015427928595-fgf3ep8cocped3tk66oebhchvrdkbp2n</string>
 		</array>
 	</dict>
 </array>

@@ -3,14 +3,17 @@ import 'package:flutter/material.dart'; // Importa los widgets de Material Desig
 class SquareTile extends StatelessWidget {
   // Define un parámetro requerido para la ruta de la imagen.
   final String imagePath;
+  final Function()? onTap;
   const SquareTile({
     super.key,
     required this.imagePath,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
       padding: const EdgeInsets.all(20), // Añade relleno alrededor de la imagen.
       decoration: BoxDecoration(
         border: Border.all(color: Colors.white), // Borde blanco.

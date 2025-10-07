@@ -1,6 +1,7 @@
 import 'package:calendario/componentes/my_button.dart';
 import 'package:calendario/componentes/my_textfield.dart';
 import 'package:calendario/componentes/square_tile.dart';
+import 'package:calendario/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -204,14 +205,20 @@ class _RegisterPageState extends State<RegisterPage> {
               // google + apple sign in buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   // google button
-                  SquareTile(imagePath: 'assets/google.png'),
+                  SquareTile(
+                    onTap: () => AuthService().signInWithGoogle(),
+                    imagePath: 'assets/google.png'
+                    ),
 
                   SizedBox(width: 25),
 
                   // apple button
-                  SquareTile(imagePath: 'assets/apple.png')
+                  SquareTile(
+                    onTap: () {},
+                    imagePath: 'assets/apple.png'
+                    )
                 ],
               ),
 
