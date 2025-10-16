@@ -88,14 +88,20 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             const SizedBox(height: 20),
             const Text(
-              'Sean bienvenidos a ¡Remind!',
+              '¡Organiza, Recuerda y Sonríe!',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 50),
+               const SizedBox(height: 30),
+                  Image.asset(
+                  'assets/remi.png',
+                  height: 150,
+                ),
+                const SizedBox(height: 30),
+
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
             ),

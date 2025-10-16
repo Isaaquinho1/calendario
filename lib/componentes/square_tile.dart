@@ -12,8 +12,7 @@ class SquareTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return Container(
       padding: const EdgeInsets.all(20), // Añade relleno alrededor de la imagen.
       decoration: BoxDecoration(
         border: Border.all(color: Colors.white), // Borde blanco.

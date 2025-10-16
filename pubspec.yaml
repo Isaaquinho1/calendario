@@ -39,7 +39,7 @@ dependencies:
     # Core de Firebase
   firebase_auth: ^6.1.0
     # Paquete de Google Sign In (requerido para el flujo de autenticación)
-  google_sign_in: ^7.2.0 
+  #google_sign_in: ^7.2.0 
 
 
 dev_dependencies:
