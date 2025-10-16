@@ -3,12 +3,46 @@ import 'package:calendario/firebase_options.dart';
 import 'package:calendario/pages/auth_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// 🔑 Importaciones de HIVE, Modelos y Servicios
+import 'package:hive_flutter/hive_flutter.dart'; 
+import 'package:intl/date_symbol_data_local.dart';
+import 'models/task.dart'; 
+import 'utils/notification_service.dart'; 
+
+// 🔑 Declaración Global del Plugin de Notificaciones
+late final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 1. Inicialización de Firebase (ya existente)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // 2. Inicialización de Hive, Notificaciones y Formato de Fecha
+  await initializeDateFormatting('es', null);
+  await NotificationService.init(); // Inicializa Time Zones
+  
+  // 🔑 Inicialización del Plugin de Notificaciones
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon');
+  const DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings();
+  const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // Inicialización de Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(TaskAdapter()); // Asegúrate de que TaskAdapter exista
+  await Hive.openBox<Task>('tasks'); // Abre la caja que HomeScreen necesita
+
   runApp(const MyApp());
 }
 
@@ -26,7 +60,7 @@ class MyApp extends StatelessWidget {
 }
 
 // -------------------------------------------------------------------
-// WIDGET DE PANTALLA DE CARGA (SPLASH SCREEN)
+// WIDGET DE PANTALLA DE CARGA (SPLASH SCREEN) - Sin cambios funcionales
 // -------------------------------------------------------------------
 
 class SplashScreen extends StatefulWidget {
@@ -46,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
   // Función para manejar el tiempo de espera y la navegación
   _navigateToHome() async {
     // Espera 3 segundos para mostrar el logo
-    await Future.delayed(const Duration(seconds: 6));
+    await Future.delayed(const Duration(seconds: 3)); // Reducido el tiempo de espera
 
     // Muestra el mensaje de bienvenida y luego navega a AuthPage
     if (mounted) {
@@ -56,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen> {
             '¡Bienvenidos a Remind!',
             textAlign: TextAlign.center,
           ),
-          duration: Duration(seconds: 4), // Duración del mensaje
+          duration: Duration(seconds: 2), // Duración del mensaje
         ),
       );
 
@@ -82,8 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Reemplaza esto con el widget de tu logo real (ej. Image.asset('assets/logo.png'))
-      Image.asset ('assets/remind.png',
+            Image.asset ('assets/remind.png',
                 height: 200,
               ),
             const SizedBox(height: 20),

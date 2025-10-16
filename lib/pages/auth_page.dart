@@ -1,4 +1,4 @@
-import 'package:calendario/pages/home_page.dart';
+import 'package:calendario/screens/home_screen.dart';
 import 'package:calendario/pages/login_or_register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +14,7 @@ class AuthPage extends StatelessWidget{
         builder: (context, snapshot){
           //usuario logeado
           if (snapshot.hasData){
-            return HomePage();
+            return HomeScreen();
           }
 
           //usuario no logeado  

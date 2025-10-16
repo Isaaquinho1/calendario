@@ -1,8 +1,8 @@
 import 'package:calendario/componentes/my_button.dart';
 import 'package:calendario/componentes/my_textfield.dart';
-//import 'package:calendario/componentes/square_tile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../screens/home_screen.dart'; // 🔑 Añadida importación para navegar a HomeScreen
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -21,8 +21,12 @@ class _RegisterPageState extends State<RegisterPage> {
   // NUEVO: Estado para el checkbox de términos y condiciones
   bool _agreedToTerms = false;
 
-  // Función para mostrar mensajes de error al usuario (fondo morado)
+  // ------------------------------------------------------------------
+  // FUNCIÓN: Muestra mensajes de error al usuario (fondo morado)
+  // ------------------------------------------------------------------
   void showErrorMessage(String message) {
+    if (!mounted) return; // 🔑 Chequeo de seguridad al inicio
+    
     showDialog(
       context: context,
       barrierDismissible: true, // Permitir cerrar al tocar fuera
@@ -49,12 +53,31 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  // ------------------------------------------------------------------
   // FUNCIÓN: Mostrar mensaje de éxito (fondo verde)
+  // ------------------------------------------------------------------
   void showSuccessMessage(String message) {
+    if (!mounted) return; // 🔑 Chequeo de seguridad al inicio
+    
     showDialog(
       context: context,
       barrierDismissible: true, // Permitir cerrar al tocar fuera
-      builder: (context) {
+      builder: (dialogContext) { // Usamos 'dialogContext' para evitar ambigüedad
+        
+        // Cierra el diálogo y NAVEGA automáticamente después de un pequeño delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            // Cierra el diálogo
+            Navigator.pop(dialogContext); 
+            
+            // NAVEGACIÓN A HOME SCREEN DESPUÉS DEL ÉXITO
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()), 
+            );
+          }
+        });
+        
         return AlertDialog(
           backgroundColor: Colors.green, // Color verde para indicar éxito
           title: const Center(
@@ -71,14 +94,17 @@ class _RegisterPageState extends State<RegisterPage> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white, fontSize: 16),
           ),
-          // Se han eliminado las acciones (el botón "Aceptar")
         );
       },
     );
   }
 
-  // NUEVO: Función para mostrar el diálogo de Términos y Condiciones
+  // ------------------------------------------------------------------
+  // FUNCIÓN: Muestra el diálogo de Términos y Condiciones
+  // ------------------------------------------------------------------
   void _showTermsAndConditionsDialog() {
+    if (!mounted) return; // 🔑 Chequeo de seguridad
+    
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -105,7 +131,9 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // sign user up method
+  // ------------------------------------------------------------------
+  // MÉTODO PRINCIPAL: sign user up method
+  // ------------------------------------------------------------------
   void signUserUp() async {
     // 0. VALIDACIÓN DE ACEPTACIÓN DE TÉRMINOS
     if (!_agreedToTerms) {
@@ -113,7 +141,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // 1. VALIDACIÓN DE CAMPOS VACÍOS (después de validar los términos)
+    // 1. VALIDACIÓN DE CAMPOS VACÍOS
     if (emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
@@ -122,6 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     // MOSTRAR LA RUEDA DE CARGA
+    if (!mounted) return; // Chequeo antes de usar context para showDialog
     showDialog(
       context: context,
       barrierDismissible: false, // Evita que se cierre al tocar fuera
@@ -135,10 +164,13 @@ class _RegisterPageState extends State<RegisterPage> {
     // Intentar crear el usuario
     try {
       // 2. Verificar si las contraseñas coinciden
-      if (passwordController.text != confirmPasswordController.text) {
-        // Quitar la rueda de carga
-        Navigator.pop(context);
-        showErrorMessage("Las contraseñas no coinciden.");
+      if (passwordController.text != confirmPasswordController.text){
+        
+        // 🔑 CORRECCIÓN DE LA LÍNEA 152: Uso del context después de await/lógica.
+        if (mounted) {
+          Navigator.pop(context); // Cierra la rueda de carga
+          showErrorMessage("Las contraseñas no coinciden.");
+        }
         return; // Detener la función
       }
 
@@ -148,36 +180,41 @@ class _RegisterPageState extends State<RegisterPage> {
         password: passwordController.text,
       );
 
-      // Si es exitoso, quitar la rueda de carga.
-      Navigator.pop(context);
-
-      // MOSTRAR MENSAJE DE ÉXITO
-      showSuccessMessage("Cuenta registrada correctamente.");
+      // Si es exitoso, quitar la rueda de carga y mostrar mensaje.
+      // 🔑 CORRECCIÓN DE LA LÍNEA 159: Uso del context después de await/lógica.
+      if (mounted) {
+        Navigator.pop(context);
+        showSuccessMessage("Cuenta registrada correctamente.");
+      }
 
     } on FirebaseAuthException catch (e) {
-      // Quitar la rueda de carga
-      Navigator.pop(context);
+      
+      // Manejo de errores de Firebase
+      if (mounted) {
+        // Quitar la rueda de carga
+        Navigator.pop(context);
 
-      String errorMessage;
-      // Traducir los códigos de error comunes de Firebase
-      switch (e.code) {
-        case 'weak-password':
-          errorMessage = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
-          break;
-        case 'email-already-in-use':
-          errorMessage = 'El correo electrónico ya está registrado.';
-          break;
-        case 'invalid-email':
-          errorMessage = 'El formato del correo electrónico es inválido.';
-          break;
-        case 'operation-not-allowed':
-          errorMessage = 'El registro de usuarios está deshabilitado temporalmente.';
-          break;
-        default:
-          errorMessage = 'Ocurrió un error inesperado. Código: ${e.code}';
-          break;
+        String errorMessage;
+        // Traducir los códigos de error comunes de Firebase
+        switch (e.code) {
+          case 'weak-password':
+            errorMessage = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
+            break;
+          case 'email-already-in-use':
+            errorMessage = 'El correo electrónico ya está registrado.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'El formato del correo electrónico es inválido.';
+            break;
+          case 'operation-not-allowed':
+            errorMessage = 'El registro de usuarios está deshabilitado temporalmente.';
+            break;
+          default:
+            errorMessage = 'Ocurrió un error inesperado. Código: ${e.code}';
+            break;
+        }
+        showErrorMessage(errorMessage);
       }
-      showErrorMessage(errorMessage);
     }
   }
 

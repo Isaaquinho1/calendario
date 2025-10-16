@@ -1,10 +1,10 @@
 import 'package:calendario/componentes/my_button.dart';
 import 'package:calendario/componentes/my_textfield.dart';
-import 'package:calendario/componentes/square_tile.dart';
-//import 'package:calendario/services/auth_service.dart';
+
+// Importaciones corregidas
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import '../screens/home_screen.dart'; // 🔑 Importar la pantalla de destino
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -20,16 +20,29 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   // ------------------------------------------------------------------
-  // FUNCIÓN MODIFICADA: Muestra mensaje de éxito (se cierra automáticamente)
+  // FUNCIÓN 1: Muestra mensaje de éxito (se cierra automáticamente)
   // ------------------------------------------------------------------
   void showSuccessMessage(String message) {
+    if (!mounted) return; // Chequeo de seguridad al inicio de la función
+    
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) { // 🔑 Usamos 'dialogContext' aquí para evitar la ambigüedad del linter
+        
         // Cierra el diálogo automáticamente después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
+          
           if (mounted) {
-            Navigator.pop(context);
+            
+            // 1. Cierra el diálogo usando el contexto local (dialogContext)
+            Navigator.pop(dialogContext); 
+            
+            // 2. NAVEGACIÓN A HOME SCREEN DESPUÉS DEL ÉXITO
+            // Usamos el contexto original (context) para la navegación, ya que verificamos 'mounted'.
+            Navigator.pushReplacement(
+              context, 
+              MaterialPageRoute(builder: (context) => const HomeScreen()), 
+            );
           }
         });
 
@@ -52,9 +65,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ------------------------------------------------------------------
-  // FUNCIÓN MODIFICADA: TRADUCE LOS CÓDIGOS DE ERROR DE FIREBASE
+  // FUNCIÓN 2: TRADUCE LOS CÓDIGOS DE ERROR DE FIREBASE (CORRIGE ERROR DE LÍNEA 42)
   // ------------------------------------------------------------------
   void showErrorMessage(String errorCode) {
+    if (!mounted) return; // 🔑 Agregar chequeo 'mounted'
+    
     String message;
 
     switch (errorCode) {
@@ -76,16 +91,16 @@ class _LoginPageState extends State<LoginPage> {
       case 'missing-email':
         message = 'El campo de correo electrónico no puede estar vacío.';
         break;
-      case 'empty-password': // La contraseña está vacía
+      case 'empty-password': 
         message = 'La contraseña no puede estar vacía.';
         break;
-      case 'missing-credentials': // Ambos campos vacíos
+      case 'missing-credentials': 
         message = 'El correo electrónico y la contraseña son requeridos.';
         break;
-      case 'network-request-failed': // Problema de red
+      case 'network-request-failed': 
         message = 'Error de conexión. Verifique su conexión a Internet.';
         break;
-      case 'unknown': // Error desconocido
+      case 'unknown': 
       case 'unknown-error':
         message = 'Ocurrió un error inesperado. Por favor, intente de nuevo.';
         break;
@@ -96,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) { // 🔑 Usamos 'dialogContext' aquí para evitar el error en la línea 42
         return AlertDialog(
           backgroundColor: const Color.fromARGB(255, 11, 50, 193),
           title: Center(
@@ -108,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext), // Usamos dialogContext para cerrar el diálogo
               child: const Text("Aceptar", style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -120,9 +135,7 @@ class _LoginPageState extends State<LoginPage> {
 
   // método para iniciar sesión de usuario
   void signUserIn() async {
-    // ------------------------------------------------------------------
-    // VALIDACIÓN: Verificar campos vacíos antes de la conexión
-    // ------------------------------------------------------------------
+    // ... (Validación de campos vacíos)
     if (emailController.text.isEmpty && passwordController.text.isEmpty) {
       showErrorMessage('missing-credentials');
       return;
@@ -156,18 +169,17 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // 1. Cierra el indicador de carga
-      // Se debe usar 'if (mounted)' para asegurar que el widget sigue en el árbol.
       if (mounted) {
-        Navigator.pop(context);
-        // 2. MUESTRA EL MENSAJE DE ÉXITO 🎉
+        Navigator.pop(context); 
+        // 2. MUESTRA EL MENSAJE DE ÉXITO y NAVEGA A HOME SCREEN
         showSuccessMessage('¡Iniciaste sesión correctamente! Bienvenida.');
       }
     } on FirebaseAuthException catch (e) {
       // Si hay un error, cierra el indicador de carga y muestra el mensaje de error
       if (mounted) {
         Navigator.pop(context);
+        showErrorMessage(e.code);
       }
-      showErrorMessage(e.code);
     }
   }
 
@@ -208,14 +220,14 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 10),
 
-                                               // logo de la aplicación
+                // logo de la aplicación
                 Image.asset(
                   'assets/remi.png',
                   height: 150,
                 ),
                 const SizedBox(height: 30),
 
-                // mensaje de bienvenida
+                // mensaje de inicio de sesión
                 Text(
                 '¡Iniciar sesión!',
                   style: TextStyle(
@@ -243,20 +255,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 const SizedBox(height: 10),
-
-                // ¿olvidaste la contraseña?
-/*                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        '¿Has olvidado tu contraseña?',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),*/
 
                 const SizedBox(height: 25),
 
