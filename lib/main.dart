@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '¡Bienvenidos a Remind!',
+            '¡Bienvenid@ a Remind!',
             textAlign: TextAlign.center,
           ),
           duration: Duration(seconds: 2), // Duración del mensaje

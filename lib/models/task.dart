@@ -39,7 +39,7 @@ class Task {
     this.isCompleted = false,
     this.reminderInterval = 'Ninguno', 
     this.repetitionFrequency = 'Ninguno',
-  }) : colorValue = color.value; // ✅ Corrección: La inicialización final se realiza aquí.
+  }) : colorValue = color.toARGB32(); // ✅ Corrección: La inicialización final se realiza aquí.
     
   // Getter para recrear el objeto Color
   Color get color => Color(colorValue);
