@@ -4,6 +4,7 @@ import 'package:calendario/componentes/my_textfield.dart';
 // Importaciones corregidas
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // 🔑 Importación de SVG
 import '../screens/home_screen.dart'; // 🔑 Importar la pantalla de destino
 
 class LoginPage extends StatefulWidget {
@@ -27,18 +28,16 @@ class _LoginPageState extends State<LoginPage> {
     
     showDialog(
       context: context,
-      builder: (dialogContext) { // 🔑 Usamos 'dialogContext' aquí para evitar la ambigüedad del linter
+      builder: (dialogContext) { 
         
         // Cierra el diálogo automáticamente después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
           
           if (mounted) {
             
-            // 1. Cierra el diálogo usando el contexto local (dialogContext)
             Navigator.pop(dialogContext); 
             
             // 2. NAVEGACIÓN A HOME SCREEN DESPUÉS DEL ÉXITO
-            // Usamos el contexto original (context) para la navegación, ya que verificamos 'mounted'.
             Navigator.pushReplacement(
               context, 
               MaterialPageRoute(builder: (context) => const HomeScreen()), 
@@ -65,10 +64,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ------------------------------------------------------------------
-  // FUNCIÓN 2: TRADUCE LOS CÓDIGOS DE ERROR DE FIREBASE (CORRIGE ERROR DE LÍNEA 42)
+  // FUNCIÓN 2: TRADUCE LOS CÓDIGOS DE ERROR DE FIREBASE (CORRECCIÓN DE SEGURIDAD)
   // ------------------------------------------------------------------
   void showErrorMessage(String errorCode) {
-    if (!mounted) return; // 🔑 Agregar chequeo 'mounted'
+    // 🔑 Chequeo de seguridad al inicio de la función
+    if (!mounted) return; 
     
     String message;
 
@@ -111,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) { // 🔑 Usamos 'dialogContext' aquí para evitar el error en la línea 42
+      builder: (dialogContext) { // 🔑 CORREGIDO: Usamos 'dialogContext' para la limpieza del linter
         return AlertDialog(
           backgroundColor: const Color.fromARGB(255, 11, 50, 193),
           title: Center(
@@ -188,10 +188,13 @@ class _LoginPageState extends State<LoginPage> {
   void wrongEmailMessage() {}
   void wrongPasswordMessage() {}
 
+  // ------------------------------------------------------------------
+  // MÉTODO BUILD (DISEÑO ACTUALIZADO)
+  // ------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: Center(
           // Permite el desplazamiento vertical para pantallas pequeñas
@@ -201,41 +204,27 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 50),
 
-                // logo de la aplicación
-                Image.asset(
-                  'assets/remind.png',
-                  height: 150, // Ajustado para centrar mejor
+                // 🔑 NUEVO LOGO: Remi2.svg (reemplaza a remind.png y remi.png)
+                SvgPicture.asset(
+                  'remi2.svg',
+                  height: 150, 
                 ),
 
-                const SizedBox(height: 10),
-
-                // mensaje de bienvenida
-                Text(
-                  '¡Bienvenido de nuevo!', // Mensaje ligeramente más amigable
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 25,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // logo de la aplicación
-                Image.asset(
-                  'assets/remi.png',
-                  height: 150,
-                ),
                 const SizedBox(height: 30),
 
-                // mensaje de inicio de sesión
-                Text(
-                '¡Iniciar sesión!',
+                // 🔑 NUEVO TEXTO UNIFICADO: Inicia sesión o regístrate
+                const Text(
+                  'Inicia sesión o regístrate para empezar',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.grey[700],
+                    color: Color(0xFF575757), // Tono de gris oscuro
                     fontSize: 25,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 
+                // ❌ ELIMINADO: Mensajes antiguos ('¡Bienvenido de nuevo!' e '¡Iniciar sesión!')
+
                 const SizedBox(height: 30),
 
                 // campo de texto para correo

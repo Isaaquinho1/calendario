@@ -2,6 +2,7 @@ import 'package:calendario/componentes/my_button.dart';
 import 'package:calendario/componentes/my_textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../screens/home_screen.dart'; // 🔑 Añadida importación para navegar a HomeScreen
 
 class RegisterPage extends StatefulWidget {
@@ -117,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           content: SingleChildScrollView(
             child: Text(
-              "Gracias por usar Remind Calendar. Al crear una cuenta, usted acepta los siguientes términos:\n\n"
+              "Gracias por usar Remind. Al crear una cuenta, usted acepta los siguientes términos:\n\n"
               "*1. Aceptación de Términos:* El uso de la aplicación implica la aceptación total de estos términos, los cuales pueden ser actualizados sin previo aviso.\n\n"
               "*2. Privacidad:* Sus datos (correo y contraseña) se almacenan de forma segura mediante Firebase Authentication y no serán compartidos con terceros sin su consentimiento, excepto por requerimiento legal.\n\n"
               "*3. Uso Adecuado:* La aplicación debe ser utilizada para fines lícitos y personales. Queda prohibido el uso indebido o malicioso del servicio.\n\n"
@@ -221,7 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView( // Usar SingleChildScrollView para evitar desbordamiento
@@ -230,39 +231,35 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 const SizedBox(height: 25),
 
-                // remind logo
-                Image.asset(
-                  'assets/remind.png',
+                SvgPicture.asset(
+                  'remi2.svg',
                   height: 150, // Ajustar la altura
                 ),
 
                 const SizedBox(height: 25),
 
-                // let's create an account for you
+                // 🔑 NUEVO TEXTO: ¡Hola, te damos la bienvenida a Remind!
                 Text(
-                  '¡Vamos, crea una cuenta para ti!',
+                  '¡Hola, te damos la bienvenida a Remind!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.grey[700],
-                    fontSize: 20, // Ajustar tamaño para mejor visualización
+                    fontSize: 22, // Tamaño más grande que el original (20)
+                    fontWeight: FontWeight.bold, // Texto en negritas
                   ),
                 ),
 
                 const SizedBox(height: 30),
 
-                // logo remi
-                Image.asset(
-                  'assets/remi.png',
-                  height: 150,
-                ),
-                const SizedBox(height: 30),
+                // ❌ ELIMINADO: logo remi (remi.png)
 
-                // mensaje de bienvenida
+                // 🔑 NUEVO TEXTO DE INSTRUCCIÓN (Reemplaza el texto '¡Regístrate')
                 Text(
-                  '¡Regístrate',
+                  'Ingresa tu correo electrónico para comenzar',
                   style: TextStyle(
                     color: Colors.grey[700],
-                    fontSize: 25,
+                    // Tamaño similar a un hintText (el que usa MyTextField)
+                    fontSize: 16, 
                   ),
                 ),
                 
@@ -307,7 +304,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             _agreedToTerms = newValue!;
                           });
                         },
-                        activeColor: Colors.deepPurple,
+                        activeColor: const Color.fromARGB(255, 58, 183, 100),
                       ),
                       Text(
                         'Acepto los ',
