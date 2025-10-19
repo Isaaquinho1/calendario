@@ -13,21 +13,23 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    // 🔑 1. HABILITAR SOPORTE DE COMPILACIÓN DE JAVA 8 Y CORE DESUGARING
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // Asegura la compatibilidad con Java 8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        
+        // HABILITAR CORE DESUGARING (Requerido por flutter_local_notifications)
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_1_8.toString() // Cambiar a 1_8 para consistencia
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.calendario"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 24//flutter.minSdkVersion
+        minSdk = 24 //flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -35,8 +37,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -44,4 +44,13 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// 🔑 2. AÑADIR SECCIÓN DE DEPENDENCIAS Y LA LIBRERÍA DE DESUGARING
+dependencies {
+    // 🔑 AÑADIR LA DEPENDENCIA DE CORE DESUGARING
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.5.5")
+    
+    // Si tienes otras dependencias, añádelas aquí (ej. implementación de Firebase Auth)
+    // implementation("com.google.firebase:firebase-auth")
 }
