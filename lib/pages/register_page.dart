@@ -21,6 +21,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // NUEVO: Estado para el checkbox de términos y condiciones
   bool _agreedToTerms = false;
+ 
+ // 🔑 ESTADOS DE VISIBILIDAD PARA CADA CAMPO
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   // ------------------------------------------------------------------
   // FUNCIÓN: Muestra mensajes de error al usuario (fondo morado)
@@ -33,7 +37,7 @@ class _RegisterPageState extends State<RegisterPage> {
       barrierDismissible: true, // Permitir cerrar al tocar fuera
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: const Color.fromARGB(255, 114, 193, 243),
           title: const Center(
             child: Text(
               "Error de Registro", // Título en español para el diálogo
@@ -211,7 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
             errorMessage = 'El registro de usuarios está deshabilitado temporalmente.';
             break;
           default:
-            errorMessage = 'Ocurrió un error inesperado. Código: ${e.code}';
+            errorMessage = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
             break;
         }
         showErrorMessage(errorMessage);
@@ -243,7 +247,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   '¡Hola, te damos la bienvenida a Remind!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.grey[700],
+                    color: const Color.fromARGB(255, 0, 0, 0),
                     fontSize: 22, // Tamaño más grande que el original (20)
                     fontWeight: FontWeight.bold, // Texto en negritas
                   ),
@@ -251,7 +255,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 30),
 
-                // ❌ ELIMINADO: logo remi (remi.png)
 
                 // 🔑 NUEVO TEXTO DE INSTRUCCIÓN (Reemplaza el texto '¡Regístrate')
                 Text(
@@ -274,20 +277,50 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 10),
 
-                // password textfield
+                // 🔑 CAMPO DE CONTRASEÑA (passwordController)
                 MyTextField(
                   controller: passwordController,
                   hintText: 'Ingresar contraseña',
-                  obscureText: true,
+                  // Usa el estado para ocultar/mostrar
+                  obscureText: !_isPasswordVisible, 
+                  // 🔑 Ícono de visibilidad
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color.fromARGB(255, 59, 59, 59), 
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible; // Alternar visibilidad
+                      });
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 10),
 
-                // confirm password textfield
+                // 🔑 CAMPO DE CONFIRMACIÓN DE CONTRASEÑA (confirmPasswordController)
                 MyTextField(
                   controller: confirmPasswordController,
                   hintText: 'Confirmar contraseña',
-                  obscureText: true,
+                  // Usa el estado de confirmación
+                  obscureText: !_isConfirmPasswordVisible,
+                  // 🔑 Ícono de visibilidad
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color.fromARGB(255, 59, 59, 59), 
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible; // Alternar visibilidad
+                      });
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 15),

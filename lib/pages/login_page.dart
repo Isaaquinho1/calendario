@@ -20,6 +20,9 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  // 🔑 NUEVO ESTADO: Controla si la contraseña es visible
+  bool _isPasswordVisible = false;
+
   // ------------------------------------------------------------------
   // FUNCIÓN 1: Muestra mensaje de éxito (se cierra automáticamente)
   // ------------------------------------------------------------------
@@ -156,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
       barrierDismissible: false, // Evita que se cierre al tocar fuera
       builder: (context) {
         return const Center(
-          child: CircularProgressIndicator(color: Colors.deepPurple),
+          child: CircularProgressIndicator(color: Color.fromARGB(255, 114, 193, 243)),
         );
       },
     );
@@ -172,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         Navigator.pop(context); 
         // 2. MUESTRA EL MENSAJE DE ÉXITO y NAVEGA A HOME SCREEN
-        showSuccessMessage('¡Iniciaste sesión correctamente! Bienvenida.');
+        showSuccessMessage('¡Has iniciado sesión correctamente!');
       }
     } on FirebaseAuthException catch (e) {
       // Si hay un error, cierra el indicador de carga y muestra el mensaje de error
@@ -192,12 +195,11 @@ class _LoginPageState extends State<LoginPage> {
   // MÉTODO BUILD (DISEÑO ACTUALIZADO)
   // ------------------------------------------------------------------
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: Center(
-          // Permite el desplazamiento vertical para pantallas pequeñas
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -217,7 +219,7 @@ class _LoginPageState extends State<LoginPage> {
                   'Inicia sesión o regístrate para empezar',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color(0xFF575757), // Tono de gris oscuro
+                    color: Color.fromARGB(255, 0, 0, 0), // Tono de gris oscuro
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
                   ),
@@ -236,11 +238,26 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 10),
 
-                // campo de texto para contraseña
+                // 🔑 CAMPO DE CONTRASEÑA CORREGIDO
                 MyTextField(
                   controller: passwordController,
-                  hintText: 'Ingresar contraseña', // Corregido el typo
-                  obscureText: true,
+                  hintText: 'Ingresar contraseña', 
+                  // Usa el estado para ocultar/mostrar
+                  obscureText: !_isPasswordVisible, 
+                  // 🔑 Ícono de visibilidad
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color.fromARGB(255, 59, 59, 59),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible; // Alternar visibilidad
+                      });
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 10),
@@ -261,7 +278,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Text(
                       '¿No eres miembro?',
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(

@@ -48,13 +48,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   ];
 
   // Colores del Tema (Las variables no utilizadas han sido eliminadas o corregidas)
-  static const Color primaryColor = Color(0xFF555FD0); 
-  static const Color backgroundColor = Color(0xFF2B2C33); 
-  static const Color cardColor = Color(0xFF3B3C45); 
-  static const Color whiteCardColor = Color(0xFFE8E8E8); 
-  static const Color darkTextColor = Color(0xFF444444); 
-  static const Color textColor = Colors.white; 
-  static const Color secondaryTextColor = Color(0xFFAAAAAA);
+  static const Color primaryColor = Color.fromARGB(255, 55, 78, 107); 
+  static const Color backgroundColor = Color.fromARGB(255, 232, 232, 232); 
+  static const Color cardColor = Color.fromARGB(255, 212, 212, 212); 
+  static const Color whiteCardColor = Color.fromARGB(255, 212, 212, 212); 
+  static const Color darkTextColor = Color.fromARGB(255, 55, 78, 107); 
+  static const Color textColor = Color.fromARGB(255, 59, 59, 59); 
+  static const Color secondaryTextColor = Color.fromARGB(255, 59, 59, 59);
 
   // Paleta de colores (Se mantiene, se usa en el picker)
   final List<Color> _colorPalette = const [
@@ -63,6 +63,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     Colors.teal,
     Colors.pink,
     Colors.purple,
+    Colors.red,
+    Colors.yellow,
   ];
 
   // --- Funciones de Seleccion de Fecha y Hora ---

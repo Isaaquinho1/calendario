@@ -26,11 +26,13 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   late Color _selectedColor; 
 
   final List<Color> _colorPalette = [
+    Colors.orange, 
     Colors.indigo,
-    Colors.pink,
     Colors.teal,
-    Colors.orange,
+    Colors.pink,
     Colors.purple,
+    Colors.red,
+    Colors.yellow,
   ];
   
   @override
@@ -117,10 +119,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     final Color primaryColor = Colors.indigo.shade700;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 232, 232, 232),
       appBar: AppBar(
         title: const Text('Editar Tarea'),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 232, 232, 232),
         foregroundColor: primaryColor,
         elevation: 0,
       ),

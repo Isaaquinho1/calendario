@@ -93,11 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     // 🔑 Colores del tema
-    const Color primaryColor = Color(0xFF555FD0); // Color principal para botones/iconos
-    const Color backgroundColor = Color(0xFF2B2C33); // Fondo Gris Oscuro
-    const Color cardColor = Color(0xFF3B3C45); // Fondo de tarjeta (más claro que el fondo)
-    const Color textColor = Colors.white; // Texto principal
-    const Color secondaryTextColor = Color(0xFFAAAAAA); // Texto secundario
+    const Color primaryColor = Color.fromARGB(255, 55, 78, 107); 
+    const Color backgroundColor = Color.fromARGB(255, 232, 232, 232); 
+    const Color cardColor = Color.fromARGB(255, 212, 212, 212); 
+    const Color textColor = Color.fromARGB(255, 59, 59, 59); 
+    const Color secondaryTextColor = Color.fromARGB(255, 55, 78, 107); 
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -297,10 +297,8 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ❌ ELIMINAR: Esta variable 'primaryColor' ya no se usa, lo que causaba una advertencia.
-    // const Color primaryColor = Color(0xFF555FD0); 
-    const Color textColor = Colors.white; 
-    const Color secondaryTextColor = Color(0xFFAAAAAA);
+    const Color textColor = Color.fromARGB(255, 0, 0, 0); 
+    const Color secondaryTextColor = Color.fromARGB(255, 0, 0, 0);
     
     return Dismissible(
       key: Key(task.title + task.dueDate.toString()), 
