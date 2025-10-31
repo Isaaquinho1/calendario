@@ -65,6 +65,12 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<true/><key>NSPhotoLibraryUsageDescription</key>
+<string>Necesitamos acceso a tu galería para seleccionar una foto de perfil.</string>
+<key>NSCameraUsageDescription</key>
+<string>Necesitamos acceso a tu cámara para tomar una foto de perfil.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Necesitamos acceso a tu micrófono para la cámara (aunque no se use para fotos).</string>
+
 </dict>
 </plist>

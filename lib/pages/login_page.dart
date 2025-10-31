@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
         });
 
         return AlertDialog(
-          backgroundColor: Colors.green, // Color verde para el éxito
+          backgroundColor: const Color.fromARGB(255, 114, 193, 243), // Color verde para el éxito
           title: Center(
             child: Text(
               message,
@@ -108,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
         message = 'Ocurrió un error inesperado. Por favor, intente de nuevo.';
         break;
       default:
-        message = 'Ocurrió un error inesperado ($errorCode). Por favor, intente de nuevo.';
+        message = 'Correo y/o contraseña incorrecto, por favor, intente de nuevo';
         break;
     }
 
@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       builder: (dialogContext) { // 🔑 CORREGIDO: Usamos 'dialogContext' para la limpieza del linter
         return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 11, 50, 193),
+          backgroundColor: const Color.fromARGB(255, 114, 193, 243),
           title: Center(
             child: Text(
               message, // Muestra el mensaje traducido
@@ -216,7 +216,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // 🔑 NUEVO TEXTO UNIFICADO: Inicia sesión o regístrate
                 const Text(
-                  'Inicia sesión o regístrate para empezar',
+                  'Se bienvenido, Iniciar sesión',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Color.fromARGB(255, 0, 0, 0), // Tono de gris oscuro

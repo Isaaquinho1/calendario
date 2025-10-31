@@ -1,10 +1,12 @@
 // lib/screens/add_task_screen.dart
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../models/task.dart'; 
+import 'package:flutter_svg/svg.dart';
+import '../models/task.dart';
 import 'package:intl/intl.dart';
-import '../utils/notification_service.dart';
-import '../main.dart';
+//import '../utils/notification_service.dart';
+//import '../main.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -14,20 +16,20 @@ class AddTaskScreen extends StatefulWidget {
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  // Los Controladores y las variables que cambian (Date, Time, Color)
-  // NO deben ser final, a pesar de la advertencia.
+  // Controladores
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
-  
+  final TextEditingController _categoryController = TextEditingController(); // ⬅️ NUEVO
+
+  // Variables de estado
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  Color _selectedColor = Colors.orange.shade700; 
-  
-  // Variables para los selectores de Recordar y Repetir
   String _selectedReminder = 'Ninguno';
-  String _selectedRepetition = 'Ninguno';
+  
+  // ⬅️ CAMBIO: Manejo de repetición con lista de booleanos
+  List<bool> _selectedDays = List.filled(7, false); // [L, M, M, J, V, S, D]
 
-  // Opciones de Recordatorio
+  // Opciones de Recordatorio (con "Personalizado")
   final List<String> _reminderOptions = const [
     'Ninguno',
     '5 minutos antes',
@@ -37,48 +39,43 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     '30 minutos antes',
     '45 minutos antes',
     '1 hora antes',
+    'Personalizado',
   ];
 
-  // Opciones de Repetición
-  final List<String> _repetitionOptions = const [
-    'Ninguno',
-    'Diariamente',
-    'Semanalmente',
-    'Mensualmente',
-  ];
-
-  // Colores del Tema (Las variables no utilizadas han sido eliminadas o corregidas)
-  static const Color primaryColor = Color.fromARGB(255, 55, 78, 107); 
-  static const Color backgroundColor = Color.fromARGB(255, 232, 232, 232); 
-  static const Color cardColor = Color.fromARGB(255, 212, 212, 212); 
-  static const Color whiteCardColor = Color.fromARGB(255, 212, 212, 212); 
-  static const Color darkTextColor = Color.fromARGB(255, 55, 78, 107); 
-  static const Color textColor = Color.fromARGB(255, 59, 59, 59); 
+  // ⬅️ ELIMINADAS: Opciones de repetición y paleta de colores
+  
+  // Colores del Tema
+  static const Color primaryColor = Color.fromARGB(255, 55, 78, 107);
+  static const Color backgroundColor = Color.fromARGB(255, 232, 232, 232);
+  static const Color cardColor = Color.fromARGB(255, 212, 212, 212);
+  static const Color whiteCardColor = Color.fromARGB(255, 212, 212, 212);
+  static const Color darkTextColor = Color.fromARGB(255, 55, 78, 107);
+  static const Color textColor = Color.fromARGB(255, 59, 59, 59);
   static const Color secondaryTextColor = Color.fromARGB(255, 59, 59, 59);
 
-  // Paleta de colores (Se mantiene, se usa en el picker)
-  final List<Color> _colorPalette = const [
-    Colors.orange, // Simplificado para evitar .shade
-    Colors.indigo,
-    Colors.teal,
-    Colors.pink,
-    Colors.purple,
-    Colors.red,
-    Colors.yellow,
-  ];
+  // ⬅️ NUEVO: Nombres de los días para los botones
+  final List<String> _dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _noteController.dispose();
+    _categoryController.dispose(); // ⬅️ NUEVO
+    super.dispose();
+  }
 
   // --- Funciones de Seleccion de Fecha y Hora ---
-  
-  // La lógica del DatePicker/TimePicker no cambia, solo su Builder para el tema oscuro
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
+      locale: const Locale('es', 'ES'), // Pone el calendario en español
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark().copyWith(
+          data: ThemeData.dark().copyWith( // Mantenemos el tema oscuro para el calendario
             colorScheme: const ColorScheme.dark(
               primary: primaryColor,
               onSurface: textColor,
@@ -96,23 +93,140 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+// FUNCIÓN _selectTime MODIFICADA para estilo estándar con acento azul claro
+// (Dentro de la clase _EditTaskScreenState)
+
   Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    // 1. Inicializa las variables de estado basadas en la hora actual
+    int selectedHour = _selectedTime.hourOfPeriod;
+    if (selectedHour == 0) selectedHour = 12; // 12 AM se maneja como 12
+    int selectedMinute = _selectedTime.minute;
+    bool isAm = _selectedTime.period == DayPeriod.am;
+
+    // Controladores para el estado inicial de los pickers
+    final FixedExtentScrollController hourController =
+        FixedExtentScrollController(initialItem: selectedHour - 1); // 1-12 -> 0-11
+    final FixedExtentScrollController minuteController =
+        FixedExtentScrollController(initialItem: selectedMinute); // 0-59
+
+    // 2. Muestra un diálogo personalizado que devuelve un TimeOfDay
+    final TimeOfDay? picked = await showDialog<TimeOfDay>(
       context: context,
-      initialTime: _selectedTime,
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: primaryColor,
-              onSurface: textColor,
-              surface: backgroundColor,
-            ),
-          ),
-          child: child!,
+      builder: (BuildContext context) {
+        // 3. Usa StatefulBuilder para que el contenido del diálogo pueda actualizar su propio estado
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: cardColor, // Usa tu color de tarjeta
+              title: const Text('Seleccionar Hora',
+                  style: TextStyle(color: textColor)),
+              contentPadding: const EdgeInsets.symmetric(vertical: 20),
+              content: SizedBox(
+                height: 200, // Altura fija para los pickers
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // --- Picker de Hora (1-12) ---
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: hourController,
+                        itemExtent: 40,
+                        onSelectedItemChanged: (int index) {
+                          selectedHour = index + 1; // El índice es 0-11, el valor es 1-12
+                        },
+                        children: List.generate(
+                            12,
+                            (index) => Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                        color: textColor, fontSize: 22),
+                                  ),
+                                )),
+                      ),
+                    ),
+                    const Text(':',
+                        style: TextStyle(
+                            color: textColor,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold)),
+                    // --- Picker de Minutos (0-59) ---
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: minuteController,
+                        itemExtent: 40,
+                        onSelectedItemChanged: (int index) {
+                          selectedMinute = index;
+                        },
+                        looping: true, // Los minutos pueden dar la vuelta
+                        children: List.generate(
+                            60,
+                            (index) => Center(
+                                  child: Text(
+                                    index.toString().padLeft(2, '0'), // Formato "00", "01", etc.
+                                    style: const TextStyle(
+                                        color: textColor, fontSize: 22),
+                                  ),
+                                )),
+                      ),
+                    ),
+                    // --- Botones AM/PM ---
+                    ToggleButtons(
+                      direction: Axis.vertical, // Botones en vertical
+                      isSelected: [isAm, !isAm], // [true, false] = AM, [false, true] = PM
+                      onPressed: (int index) {
+                        // Actualiza el estado *solo* del diálogo
+                        setStateDialog(() {
+                          isAm = index == 0; // 0 es AM, 1 es PM
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      selectedColor: Colors.white,
+                      fillColor: const Color.fromARGB(255, 114, 193, 243).withAlpha(200), // Usa tu color primario
+                      color: primaryColor,
+                      constraints:
+                          const BoxConstraints(minWidth: 50, minHeight: 40),
+                      children: const [
+                        Text('AM', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('PM', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(width: 10), // Pequeño espacio
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                    child: const Text('Cancelar',
+                        style: TextStyle(color: secondaryTextColor)),
+                    onPressed: () {
+                      Navigator.pop(context); // Devuelve null
+                    }),
+                TextButton(
+                  child: const Text('Aceptar',
+                      style: TextStyle(
+                          color: primaryColor, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    // 4. Convierte el estado de 12h a 24h (TimeOfDay)
+                    int hour24;
+                    if (isAm) {
+                      hour24 = (selectedHour == 12) ? 0 : selectedHour; // 12 AM es 0
+                    } else {
+                      hour24 = (selectedHour == 12) ? 12 : selectedHour + 12; // 12 PM es 12
+                    }
+                    // Devuelve el TimeOfDay seleccionado
+                    Navigator.pop(
+                        context, TimeOfDay(hour: hour24, minute: selectedMinute));
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
+
+    // 5. Esta lógica (la que ya tenías) no cambia
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
@@ -120,7 +234,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
   
-  // Función para mostrar el selector de opciones (Recordar/Repetir)
+
+  // --- Funciones de Selectores Personalizados (Recordar) ---
+
+  // (Esta función se mantiene igual)
   Future<void> _showOptionSelector(
       BuildContext context, List<String> options, String current, Function(String) onSelect) async {
     final String? selected = await showModalBottomSheet<String>(
@@ -150,7 +267,80 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  // --- Función para guardar la tarea (ACTUALIZADA con nuevos campos) ---
+  // (Esta función se mantiene igual)
+  Future<void> _showCustomReminderDialog() async {
+    final TextEditingController reminderController = TextEditingController();
+
+    final String? minutes = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: cardColor,
+          title: const Text('Recordatorio Personalizado', style: TextStyle(color: textColor)),
+          content: TextField(
+            controller: reminderController,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            style: const TextStyle(color: textColor),
+            decoration: InputDecoration(
+              hintText: 'Minutos antes',
+              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(150)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(color: secondaryTextColor)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: const Text('Aceptar', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.pop(context, reminderController.text);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (minutes != null && minutes.isNotEmpty) {
+      final int? min = int.tryParse(minutes);
+      if (min != null && min > 0) {
+        setState(() {
+          _selectedReminder = '$min minutos antes';
+        });
+      }
+    }
+  }
+  
+  // ⬅️ ELIMINADA: _showWeeklyRepetitionDialog()
+
+  // ⬅️ NUEVO: Helper para convertir la lista de días en un String
+  String _getRepetitionString() {
+    final List<String> chosenDays = [];
+    int selectedCount = 0;
+    for (int i = 0; i < _selectedDays.length; i++) {
+      if (_selectedDays[i]) {
+        chosenDays.add(_dayNames[i]);
+        selectedCount++;
+      }
+    }
+
+    if (selectedCount == 0) {
+      return 'Ninguno';
+    } else if (selectedCount == 7) {
+      return 'Diariamente';
+    } else if (selectedCount == 5 && _selectedDays[5] == false && _selectedDays[6] == false) {
+      return 'Entre semana';
+    } else if (selectedCount == 2 && _selectedDays[5] == true && _selectedDays[6] == true) {
+      return 'Fines de semana';
+    } else {
+      return 'Semanal: ${chosenDays.join(', ')}';
+    }
+  }
+
+
+  // --- Función para guardar la tarea (ACTUALIZADA) ---
   void _saveTask() {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,17 +357,22 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       _selectedTime.minute,
     );
     
-    // El modelo Task ahora usa los parámetros this. para inicializar los campos
+    // ⬅️ CAMBIO: Preparamos la nota con la categoría
+    String note = _noteController.text;
+    if (_categoryController.text.isNotEmpty) {
+      note = "Categoría: ${_categoryController.text}\n\n${_noteController.text}";
+    }
+
     final newTask = Task(
       title: _titleController.text,
-      note: _noteController.text,
+      note: note, // ⬅️ CAMBIO: La nota ahora incluye la categoría
       dueDate: newDueDate,
-      color: _selectedColor,
+      color: primaryColor, // ⬅️ CAMBIO: Color por defecto
       reminderInterval: _selectedReminder,
-      repetitionFrequency: _selectedRepetition,
+      repetitionFrequency: _getRepetitionString(), // ⬅️ CAMBIO: Usa el helper
     );
-    
-    NotificationService.scheduleNotification(newTask, flutterLocalNotificationsPlugin);
+
+    //NotificationService.scheduleNotification(newTask, flutterLocalNotificationsPlugin);
 
     Navigator.pop(context, newTask);
   }
@@ -187,7 +382,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: null, 
+        // ... (AppBar se mantiene igual)
+        title: null,
         backgroundColor: backgroundColor,
         elevation: 0,
         leading: Padding(
@@ -198,11 +394,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                color: cardColor, 
+                color: cardColor,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.arrow_back_ios_new, 
+                Icons.arrow_back_ios_new,
                 color: textColor,
                 size: 20,
               ),
@@ -218,12 +414,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                  color: cardColor, 
+                  color: cardColor,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.check, 
-                  color: primaryColor, 
+                  Icons.check,
+                  color: primaryColor,
                   size: 25,
                 ),
               ),
@@ -236,20 +432,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Título Central: "Agregar Nueva Tarea"
+            // Imagen (se mantiene igual)
             Center(
+              child: SvgPicture.asset(
+                'remi3.svg',
+                height: 150,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            // Título Central (se mantiene igual)
+            const Center(
               child: Text(
                 'Agregar Nueva Tarea',
-                style: const TextStyle(
-                  color: textColor, 
-                  fontSize: 20, 
-                  fontWeight: FontWeight.w900, 
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
             const SizedBox(height: 30),
-            
-            // 1. CAMPOS DE TEXTO COMBINADOS (TÍTULO Y DESCRIPCIÓN)
+
+            // 1. CAMPOS DE TEXTO (se mantiene igual)
             _buildCombinedInputCard(
               titleController: _titleController,
               noteController: _noteController,
@@ -257,10 +463,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 30),
 
-            // 2. SELECTOR DE FECHA (Color blanco agrisado)
+            // 2. SELECTOR DE FECHA (se mantiene igual)
             _buildSelectorCard(
               title: 'Fecha',
-              value: DateFormat('dd MMMM, yyyy', 'es').format(_selectedDate), 
+              value: DateFormat('dd MMMM, yyyy', 'es').format(_selectedDate),
               icon: Icons.calendar_today,
               onTap: () => _selectDate(context),
               cardColor: whiteCardColor,
@@ -269,7 +475,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 15),
 
-            // 3. SELECTOR DE HORA (Color blanco agrisado)
+            // 3. SELECTOR DE HORA (se mantiene igual, pero el color rojo se aplica)
             _buildSelectorCard(
               title: 'Hora',
               value: _selectedTime.format(context),
@@ -277,18 +483,22 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               onTap: () => _selectTime(context),
               cardColor: whiteCardColor,
               primaryColor: darkTextColor,
-              secondaryColor: primaryColor,
+              secondaryColor: darkTextColor, // Color rojo se mantiene
             ),
             const SizedBox(height: 15),
-            
-            // 4. SELECTOR DE RECORDAR
+
+            // 4. SELECTOR DE RECORDAR (se mantiene igual)
             _buildSelectorCard(
               title: 'Recordar',
               value: _selectedReminder,
               icon: Icons.notifications_active,
               onTap: () {
                 _showOptionSelector(context, _reminderOptions, _selectedReminder, (value) {
-                  setState(() => _selectedReminder = value);
+                  if (value == 'Personalizado') {
+                    _showCustomReminderDialog();
+                  } else {
+                    setState(() => _selectedReminder = value);
+                  }
                 });
               },
               cardColor: whiteCardColor,
@@ -297,62 +507,27 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 15),
 
-            // 5. SELECTOR DE REPETIR
-            _buildSelectorCard(
-              title: 'Repetir',
-              value: _selectedRepetition,
-              icon: Icons.repeat,
-              onTap: () {
-                _showOptionSelector(context, _repetitionOptions, _selectedRepetition, (value) {
-                  setState(() => _selectedRepetition = value);
-                });
-              },
-              cardColor: whiteCardColor,
-              primaryColor: darkTextColor,
-              secondaryColor: primaryColor,
-            ),
+            // 5. ⬅️ CAMBIO: SELECTOR DE REPETIR
+            _buildRepetitionSelector(),
             const SizedBox(height: 30),
 
-            // 6. SELECTOR DE PRIORIDAD (Penúltimo lugar)
-            _buildPrioritySelector(
-              title: 'Prioridad',
-              cardColor: whiteCardColor,
+            // 6. ⬅️ CAMBIO: SELECTOR DE CATEGORÍA
+            _buildCategoryInput(
+              categoryController: _categoryController,
+              cardColor: whiteCardColor
             ),
             const SizedBox(height: 30),
-
-            // 7. TEXTO DE HASTAGS
-            const Text(
-              'Agregar Hashtags',
-              style: TextStyle(
-                color: secondaryTextColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(15), 
-              ),
-              child: Text(
-                '#trabajo #personal #estudio', 
-                style: TextStyle(
-                  color: primaryColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
+            
+            // 7. ⬅️ ELIMINADO: SELECTOR DE PRIORIDAD
           ],
         ),
       ),
     );
   }
 
-  // WIDGET Selector Card (Fecha/Hora/Recordar/Repetir)
+  // --- WIDGETS AUXILIARES ---
+
+  // WIDGET Selector Card (Fecha/Hora/Recordar)
   Widget _buildSelectorCard({
     required String title,
     required String value,
@@ -362,6 +537,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     required Color primaryColor,
     required Color secondaryColor,
   }) {
+    // ... (Este widget se mantiene igual)
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -383,13 +559,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               value,
               style: TextStyle(
                 fontSize: 16,
-                color: secondaryColor,
+                color: secondaryColor, // El color del valor (hora) viene aquí
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(width: 8),
             Transform.rotate(
-              angle: -45 * (3.1415926535 / 180), 
+              angle: -45 * (3.1415926535 / 180),
               child: Icon(Icons.arrow_right_alt, color: secondaryColor, size: 25),
             ),
           ],
@@ -398,65 +574,103 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  // WIDGET Selector de Prioridad
-  Widget _buildPrioritySelector({
-    required String title,
-    required Color cardColor,
-  }) {
+  // ⬅️ ELIMINADO: _buildPrioritySelector()
+
+  // ⬅️ NUEVO: WIDGET Selector de Repetición
+  Widget _buildRepetitionSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: whiteCardColor,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: () {},
-            child: Row(
-              children: [
-                Icon(Icons.priority_high, color: darkTextColor),
-                const SizedBox(width: 15),
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 16, color: darkTextColor, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                Container(
-                  width: 15,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    color: _selectedColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Transform.rotate(
-                  angle: -45 * (3.1415926535 / 180),
-                  child: const Icon(Icons.arrow_right_alt, color: primaryColor, size: 25),
-                ),
-              ],
-            ),
+          // Título
+          Row(
+            children: [
+              const Icon(Icons.repeat, color: darkTextColor),
+              const SizedBox(width: 15),
+              const Text(
+                'Repetir',
+                style: TextStyle(fontSize: 16, color: darkTextColor, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
           const SizedBox(height: 15),
-          _buildColorPicker(),
+          
+          // Botones de Atajo
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildShortcutButton('Entre semana', () {
+                setState(() => _selectedDays = [true, true, true, true, true, false, false]);
+              }),
+              _buildShortcutButton('Fines de semana', () {
+                setState(() => _selectedDays = [false, false, false, false, false, true, true]);
+              }),
+              _buildShortcutButton('Todos los días', () {
+                setState(() => _selectedDays = List.filled(7, true));
+              }),
+            ],
+          ),
+          const SizedBox(height: 10),
+          
+          // Divisor
+          Divider(color: secondaryTextColor.withAlpha(76)),
+          const SizedBox(height: 10),
+
+          // Selectores de Días
+          Center(
+            child: ToggleButtons(
+              isSelected: _selectedDays,
+              onPressed: (int index) {
+                setState(() {
+                  _selectedDays[index] = !_selectedDays[index];
+                });
+              },
+              fillColor: primaryColor.withAlpha(200),
+              selectedColor: Colors.white,
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(10),
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              children: _dayNames.map((day) => Text(day, style: const TextStyle(fontWeight: FontWeight.bold))).toList(),
+            ),
+          ),
         ],
       ),
     );
   }
+  
+  // ⬅️ NUEVO: Helper para los botones de atajo
+  Widget _buildShortcutButton(String text, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: cardColor,
+        foregroundColor: primaryColor,
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+      ),
+      child: Text(text, style: const TextStyle(fontSize: 12)),
+    );
+  }
 
-  // WIDGET Campos de Texto Combinados (Corrección de withOpacity)
+  // WIDGET Campos de Texto Combinados (se mantiene igual)
   Widget _buildCombinedInputCard({
     required TextEditingController titleController,
     required TextEditingController noteController,
     required Color cardColor,
   }) {
+    // ... (Este widget se mantiene igual)
     const TextStyle labelStyle = TextStyle(
       color: secondaryTextColor,
       fontSize: 16,
       fontWeight: FontWeight.w700,
     );
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
@@ -474,15 +688,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             cursorColor: primaryColor,
             decoration: InputDecoration(
               hintText: 'Escribe el título...',
-              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(127)), // ✅ Corregido (withOpacity -> withAlpha)
+              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(127)),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.only(top: 5, bottom: 5),
             ),
           ),
-          
+
           // Línea divisoria
-          Divider(color: secondaryTextColor.withAlpha(76), height: 20), // ✅ Corregido (withOpacity -> withAlpha)
-          
+          Divider(color: secondaryTextColor.withAlpha(76), height: 20),
+
           // Nota/Descripción
           const Text('Descripción', style: labelStyle),
           TextField(
@@ -492,7 +706,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             cursorColor: primaryColor,
             decoration: InputDecoration(
               hintText: 'Escribe algunos detalles...',
-              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(127)), // ✅ Corregido (withOpacity -> withAlpha)
+              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(127)),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.only(top: 5, bottom: 5),
             ),
@@ -502,39 +716,41 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  // WIDGET Selector de Color (El cuerpo de la función es el mismo)
-  Widget _buildColorPicker() {
-    return SizedBox(
-      height: 40,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _colorPalette.length,
-        itemBuilder: (context, index) {
-          final color = _colorPalette[index];
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedColor = color;
-              });
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              margin: const EdgeInsets.only(right: 15),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: _selectedColor == color
-                    ? Border.all(color: Colors.black, width: 3)
-                    : null,
-              ),
-              child: _selectedColor == color
-                  ? const Icon(Icons.check, color: Colors.white, size: 20)
-                  : null,
+  // ⬅️ NUEVO: WIDGET para el campo de Categoría
+  Widget _buildCategoryInput({
+    required TextEditingController categoryController,
+    required Color cardColor,
+  }) {
+    const TextStyle labelStyle = TextStyle(
+      color: secondaryTextColor,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Categoría', style: labelStyle),
+          TextField(
+            controller: categoryController,
+            style: const TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+            cursorColor: primaryColor,
+            decoration: InputDecoration(
+              hintText: 'Ej: Escuela, Trabajo, Hogar...',
+              hintStyle: TextStyle(color: secondaryTextColor.withAlpha(127)),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.only(top: 5, bottom: 5),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
+  
+  // ⬅️ ELIMINADO: _buildColorPicker()
 }
