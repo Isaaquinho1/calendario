@@ -144,7 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
         Future.delayed(const Duration(milliseconds: 500), () {
 
-          if (mounted) {
+          if (!mounted) return; {
 
             // Cierra el diálogo
 
@@ -574,7 +574,7 @@ Si tienes preguntas, comentarios o solicitudes relacionadas con esta Política d
 
                 SvgPicture.asset(
 
-                  'remi2.svg',
+                  'assets/remi2.svg',
 
                   height: 150, // Ajustar la altura
 

@@ -15,8 +15,8 @@ class _SplashScreenState extends State<SplashScreen> {
   // 🔑 Color principal: #72C1F3
   static const Color primarySplashColor = Color(0xFF72C1F3);
   
-  // Asumo que el nombre de tu archivo es 'remi2.svg'
-  static const String remiAssetPath = 'cara_remind.svg'; 
+  // 🔑 CORRECCIÓN: Usaremos la ruta completa para el asset
+  static const String remiAssetPath = 'assets/cara_remind.svg'; 
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   // Función para manejar el tiempo de espera y la navegación (sin cambios)
-  _navigateToHome() async {
+  Future<void> _navigateToHome() async {
     // Espera 3 segundos (para el efecto visual de Duolingo)
     await Future.delayed(const Duration(seconds: 3));
 
@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔑 Mascota SVG (Dimensiones grandes y centradas)
+            // 🔑 CORRECCIÓN DE LA RUTA: SvgPicture.asset('assets/cara_remind.svg')
             SvgPicture.asset( 
               remiAssetPath, 
               height: 250, // Dimensionar para que destaque en el centro
@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
             // 🔑 Nombre de la aplicación (Estilo Duolingo)
             const Text(
-              'Remind', // Puedes cambiar esto por el nombre oficial de la app
+              'Remind', 
               style: TextStyle(
                 color: Colors.white, // Texto en blanco o un color que contraste
                 fontSize: 48,

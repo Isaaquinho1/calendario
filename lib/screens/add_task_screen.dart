@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import '../models/task.dart';
 import 'package:intl/intl.dart';
-//import '../utils/notification_service.dart';
-//import '../main.dart';
+// ❌ ELIMINADAS: Importaciones comentadas y no usadas (utils/notification_service.dart, main.dart)
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -19,17 +18,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   // Controladores
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController(); // ⬅️ NUEVO
+  final TextEditingController _categoryController = TextEditingController();
 
   // Variables de estado
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   String _selectedReminder = 'Ninguno';
   
-  // ⬅️ CAMBIO: Manejo de repetición con lista de booleanos
+  // Manejo de repetición con lista de booleanos
   List<bool> _selectedDays = List.filled(7, false); // [L, M, M, J, V, S, D]
 
-  // Opciones de Recordatorio (con "Personalizado")
+  // Opciones de Recordatorio
   final List<String> _reminderOptions = const [
     'Ninguno',
     '5 minutos antes',
@@ -42,8 +41,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     'Personalizado',
   ];
 
-  // ⬅️ ELIMINADAS: Opciones de repetición y paleta de colores
-  
   // Colores del Tema
   static const Color primaryColor = Color.fromARGB(255, 55, 78, 107);
   static const Color backgroundColor = Color.fromARGB(255, 232, 232, 232);
@@ -53,14 +50,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   static const Color textColor = Color.fromARGB(255, 59, 59, 59);
   static const Color secondaryTextColor = Color.fromARGB(255, 59, 59, 59);
 
-  // ⬅️ NUEVO: Nombres de los días para los botones
+  // Nombres de los días para los botones
   final List<String> _dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
   @override
   void dispose() {
     _titleController.dispose();
     _noteController.dispose();
-    _categoryController.dispose(); // ⬅️ NUEVO
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -93,9 +90,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-// FUNCIÓN _selectTime MODIFICADA para estilo estándar con acento azul claro
-// (Dentro de la clase _EditTaskScreenState)
-
+// 🔑 FUNCIÓN _selectTime CORREGIDA: Ahora es async y funciona el await
   Future<void> _selectTime(BuildContext context) async {
     // 1. Inicializa las variables de estado basadas en la hora actual
     int selectedHour = _selectedTime.hourOfPeriod;
@@ -182,7 +177,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       },
                       borderRadius: BorderRadius.circular(10),
                       selectedColor: Colors.white,
-                      fillColor: const Color.fromARGB(255, 114, 193, 243).withAlpha(200), // Usa tu color primario
+                      fillColor: primaryColor.withAlpha(200), // Usa tu color primario
                       color: primaryColor,
                       constraints:
                           const BoxConstraints(minWidth: 50, minHeight: 40),
@@ -427,103 +422,108 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // Imagen (se mantiene igual)
-            Center(
-              child: SvgPicture.asset(
-                'remi3.svg',
-                height: 150,
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // Título Central (se mantiene igual)
-            const Center(
-              child: Text(
-                'Agregar Nueva Tarea',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+      // 🔑 CORRECCIÓN: Estructura final del body para permitir el scroll
+      body: SafeArea( 
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Imagen (se mantiene igual)
+              Center(
+                child: SvgPicture.asset(
+                  'remi3.svg',
+                  height: 150,
+                  fit: BoxFit.contain,
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
+              const SizedBox(height: 15),
 
-            // 1. CAMPOS DE TEXTO (se mantiene igual)
-            _buildCombinedInputCard(
-              titleController: _titleController,
-              noteController: _noteController,
-              cardColor: cardColor,
-            ),
-            const SizedBox(height: 30),
+              // Título Central (se mantiene igual)
+              const Center(
+                child: Text(
+                  'Agregar Nueva Tarea',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
 
-            // 2. SELECTOR DE FECHA (se mantiene igual)
-            _buildSelectorCard(
-              title: 'Fecha',
-              value: DateFormat('dd MMMM, yyyy', 'es').format(_selectedDate),
-              icon: Icons.calendar_today,
-              onTap: () => _selectDate(context),
-              cardColor: whiteCardColor,
-              primaryColor: darkTextColor,
-              secondaryColor: primaryColor,
-            ),
-            const SizedBox(height: 15),
+              // 1. CAMPOS DE TEXTO
+              _buildCombinedInputCard(
+                titleController: _titleController,
+                noteController: _noteController,
+                cardColor: cardColor,
+              ),
+              const SizedBox(height: 30),
 
-            // 3. SELECTOR DE HORA (se mantiene igual, pero el color rojo se aplica)
-            _buildSelectorCard(
-              title: 'Hora',
-              value: _selectedTime.format(context),
-              icon: Icons.access_time,
-              onTap: () => _selectTime(context),
-              cardColor: whiteCardColor,
-              primaryColor: darkTextColor,
-              secondaryColor: darkTextColor, // Color rojo se mantiene
-            ),
-            const SizedBox(height: 15),
+              // 2. SELECTOR DE FECHA
+              _buildSelectorCard(
+                title: 'Fecha',
+                value: DateFormat('dd MMMM, yyyy', 'es').format(_selectedDate),
+                icon: Icons.calendar_today,
+                onTap: () => _selectDate(context),
+                cardColor: whiteCardColor,
+                primaryColor: darkTextColor,
+                secondaryColor: primaryColor,
+              ),
+              const SizedBox(height: 15),
 
-            // 4. SELECTOR DE RECORDAR (se mantiene igual)
-            _buildSelectorCard(
-              title: 'Recordar',
-              value: _selectedReminder,
-              icon: Icons.notifications_active,
-              onTap: () {
-                _showOptionSelector(context, _reminderOptions, _selectedReminder, (value) {
-                  if (value == 'Personalizado') {
-                    _showCustomReminderDialog();
-                  } else {
-                    setState(() => _selectedReminder = value);
-                  }
-                });
-              },
-              cardColor: whiteCardColor,
-              primaryColor: darkTextColor,
-              secondaryColor: primaryColor,
-            ),
-            const SizedBox(height: 15),
+              // 3. SELECTOR DE HORA 
+              _buildSelectorCard(
+                title: 'Hora',
+                value: _selectedTime.format(context),
+                icon: Icons.access_time,
+                onTap: () => _selectTime(context),
+                cardColor: whiteCardColor,
+                primaryColor: darkTextColor,
+                secondaryColor: darkTextColor, 
+              ),
+              const SizedBox(height: 15),
 
-            // 5. ⬅️ CAMBIO: SELECTOR DE REPETIR
-            _buildRepetitionSelector(),
-            const SizedBox(height: 30),
+              // 4. SELECTOR DE RECORDAR
+              _buildSelectorCard(
+                title: 'Recordar',
+                value: _selectedReminder,
+                icon: Icons.notifications_active,
+                onTap: () {
+                  _showOptionSelector(context, _reminderOptions, _selectedReminder, (value) {
+                    if (value == 'Personalizado') {
+                      _showCustomReminderDialog();
+                    } else {
+                      setState(() => _selectedReminder = value);
+                    }
+                  });
+                },
+                cardColor: whiteCardColor,
+                primaryColor: darkTextColor,
+                secondaryColor: primaryColor,
+              ),
+              const SizedBox(height: 15),
 
-            // 6. ⬅️ CAMBIO: SELECTOR DE CATEGORÍA
-            _buildCategoryInput(
-              categoryController: _categoryController,
-              cardColor: whiteCardColor
-            ),
-            const SizedBox(height: 30),
-            
-            // 7. ⬅️ ELIMINADO: SELECTOR DE PRIORIDAD
-          ],
-        ),
-      ),
-    );
+              // 5. SELECTOR DE REPETIR
+              _buildRepetitionSelector(),
+              const SizedBox(height: 30),
+
+              // 6. SELECTOR DE CATEGORÍA
+              _buildCategoryInput(
+                categoryController: _categoryController,
+                cardColor: whiteCardColor
+              ),
+              const SizedBox(height: 30),
+              
+              // Espacio final para el scroll
+              const SizedBox(height: 50), 
+            ],
+          ),
+        ), // <-- Cierra SingleChildScrollView
+      ), // <-- Cierra SafeArea
+    ); // <-- Cierra Scaffold
   }
+
 
   // --- WIDGETS AUXILIARES ---
 
@@ -574,8 +574,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  // ⬅️ ELIMINADO: _buildPrioritySelector()
-
   // ⬅️ NUEVO: WIDGET Selector de Repetición
   Widget _buildRepetitionSelector() {
     return Container(
@@ -618,7 +616,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           const SizedBox(height: 10),
           
           // Divisor
-          Divider(color: secondaryTextColor.withAlpha(76)),
+          Divider(color: secondaryTextColor.withAlpha(76), height: 20),
           const SizedBox(height: 10),
 
           // Selectores de Días

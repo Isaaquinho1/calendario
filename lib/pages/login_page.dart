@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
         // Cierra el diálogo automáticamente después de 2 segundos
         Future.delayed(const Duration(seconds: 2), () {
           
-          if (mounted) {
+          if (!mounted) return; {
             
             Navigator.pop(dialogContext); 
             
@@ -208,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // 🔑 NUEVO LOGO: Remi2.svg (reemplaza a remind.png y remi.png)
                 SvgPicture.asset(
-                  'remi2.svg',
+                  'assets/remi2.svg', // <-- ¡RUTA COMPLETA AHORA!
                   height: 150, 
                 ),
 
