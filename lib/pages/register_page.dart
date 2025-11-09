@@ -125,89 +125,48 @@ class _RegisterPageState extends State<RegisterPage> {
   // ------------------------------------------------------------------
 
   void showSuccessMessage(String message) {
+  if (!mounted) return;
 
-    if (!mounted) return; // 🔑 Chequeo de seguridad al inicio
+  // Guardamos el navigator principal
+  final navigator = Navigator.of(context);
 
-   
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (dialogContext) {
+      // Guardamos también el navigator del diálogo
+      final dialogNavigator = Navigator.of(dialogContext);
 
-    showDialog(
+      // Cerramos el diálogo y navegamos después de 0.5s
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
 
-      context: context,
-
-      barrierDismissible: true, // Permitir cerrar al tocar fuera
-
-      builder: (dialogContext) { // Usamos 'dialogContext' para evitar ambigüedad
-
-       
-
-        // Cierra el diálogo y NAVEGA automáticamente después de un pequeño delay
-
-        Future.delayed(const Duration(milliseconds: 500), () {
-
-          if (!mounted) return; {
-
-            // Cierra el diálogo
-
-            Navigator.pop(dialogContext);
-
-           
-
-            // NAVEGACIÓN A HOME SCREEN DESPUÉS DEL ÉXITO
-
-            Navigator.pushReplacement(
-
-              context,
-
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-
-            );
-
-          }
-
-        });
-
-       
-
-        return AlertDialog(
-
-          backgroundColor: const Color.fromARGB(255, 114, 193, 243), // Color verde para indicar éxito
-
-          title: const Center(
-
-            child: Text(
-
-              "Registro Exitoso", // Título de éxito
-
-              style: TextStyle(
-
-                color: Colors.white,
-
-                fontWeight: FontWeight.bold,
-
-              ),
-
-            ),
-
-          ),
-
-          content: Text(
-
-            message,
-
-            textAlign: TextAlign.center,
-
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-
-          ),
-
+        dialogNavigator.pop(); // Cierra el diálogo
+        navigator.pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
+      });
 
-      },
-
-    );
-
-  }
-
+      return AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 114, 193, 243),
+        title: const Center(
+          child: Text(
+            "Registro Exitoso",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      );
+    },
+  );
+}
 
 // ------------------------------------------------------------------
   // FUNCIÓN: Muestra el diálogo de Términos y Condiciones (ACTUALIZADO)

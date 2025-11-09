@@ -26,45 +26,43 @@ class _LoginPageState extends State<LoginPage> {
   // ------------------------------------------------------------------
   // FUNCIÓN 1: Muestra mensaje de éxito (se cierra automáticamente)
   // ------------------------------------------------------------------
-  void showSuccessMessage(String message) {
-    if (!mounted) return; // Chequeo de seguridad al inicio de la función
-    
-    showDialog(
-      context: context,
-      builder: (dialogContext) { 
-        
-        // Cierra el diálogo automáticamente después de 2 segundos
-        Future.delayed(const Duration(seconds: 2), () {
-          
-          if (!mounted) return; {
-            
-            Navigator.pop(dialogContext); 
-            
-            // 2. NAVEGACIÓN A HOME SCREEN DESPUÉS DEL ÉXITO
-            Navigator.pushReplacement(
-              context, 
-              MaterialPageRoute(builder: (context) => const HomeScreen()), 
-            );
-          }
-        });
+ void showSuccessMessage(String message) {
+  if (!mounted) return;
 
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 114, 193, 243), // Color verde para el éxito
-          title: Center(
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+  final navigator = Navigator.of(context); // guarda el estado del Navigator
+
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      final dialogNavigator = Navigator.of(dialogContext); // guarda otro navigator local
+
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+
+        dialogNavigator.pop(); // usa el navigator, no el context
+
+        navigator.pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      });
+
+      return AlertDialog(
+        backgroundColor: const Color.fromARGB(255, 114, 193, 243),
+        title: Center(
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          // Quitamos el botón ya que se cierra automáticamente
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 
   // ------------------------------------------------------------------
   // FUNCIÓN 2: TRADUCE LOS CÓDIGOS DE ERROR DE FIREBASE (CORRECCIÓN DE SEGURIDAD)
