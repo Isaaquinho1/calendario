@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1015427928595",
+    "project_id": "remind-81053",
+    "storage_bucket": "remind-81053.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1015427928595:android:7415e6eb1410db92b925e6",
+        "android_client_info": {
+          "package_name": "com.example.calendario"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUhgtgg5HuijfQ37pgj9U6io_yuqjeRus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

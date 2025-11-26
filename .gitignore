@@ -1,0 +1,87 @@
+# ---------------------------
+# FLUTTER / DART / PUB
+# ---------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# ---------------------------
+# ANDROID
+# ---------------------------
+android/.gradle/
+android/.idea/
+android/local.properties
+android/gradle/
+android/app/*.keystore
+android/app/*.jks
+
+# 🔥 ARCHIVOS PESADOS QUE CAUSAN ERROR (GENERADOS)
+android/app/build/
+android/app/intermediates/
+android/app/outputs/
+android/app/libs/
+**/*.so
+
+# ---------------------------
+# IOS
+# ---------------------------
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/App.framework
+**/ios/Flutter/engine/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# ---------------------------
+# WEB
+# ---------------------------
+web/.dart_tool/
+web/build/
+
+# ---------------------------
+# MACOS
+# ---------------------------
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/.generated/
+macos/Runner/GeneratedPluginRegistrant.*
+
+# ---------------------------
+# WINDOWS
+# ---------------------------
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+
+# ---------------------------
+# LINUX
+# ---------------------------
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugin_registrant.h
+
+# ---------------------------
+# IDE / MISC
+# ---------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.log
+*.class
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.history
+.svn/
+.swiftpm/
+buildlog/
