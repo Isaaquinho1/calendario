@@ -130,8 +130,9 @@ class NotificationService {
             _getReminderMessage(task.reminderMinutes, task.note),
             tz.TZDateTime.from(reminderTime, tz.local),
             reminderDetails,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
+            // ❌ ELIMINAR: Parámetro obsoleto en la versión 19+
+            // uiLocalNotificationDateInterpretation:
+            //     UILocalNotificationDateInterpretation.absoluteTime,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           );
         }
@@ -182,8 +183,7 @@ class NotificationService {
           _getAlarmMessage(task.note),
           tz.TZDateTime.from(scheduledTime, tz.local),
           alarmDetails,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
+
           androidScheduleMode:
               AndroidScheduleMode.alarmClock, //  MODO ALARMA REAL
         );

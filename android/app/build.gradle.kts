@@ -1,3 +1,10 @@
+// Archivo: android/app/build.gradle.kts
+
+// =======================================================================
+// FIX PARA AMBIGÜEDAD (Parte 1): La importación debe ir AL INICIO
+// =======================================================================
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -10,7 +17,8 @@ plugins {
 
 android {
     namespace = "com.example.calendario"
-    compileSdk = flutter.compileSdkVersion 
+    // Mantener en 36 para compatibilidad con todas las librerías modernas
+    compileSdk = 36 
     
     ndkVersion = flutter.ndkVersion
 
@@ -25,12 +33,12 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString() // Cambiar a 1_8 para consistencia
+        jvmTarget = JavaVersion.VERSION_1_8.toString() 
     }
 
     defaultConfig {
         applicationId = "com.example.calendario"
-        minSdk = 24 //flutter.minSdkVersion
+        minSdk = 24 
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -52,7 +60,13 @@ dependencies {
     // 🔑 AÑADIR LA DEPENDENCIA DE CORE DESUGARING
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     
-    // Si tienes otras dependencias, añádelas aquí (ej. implementación de Firebase Auth)
      implementation("com.google.firebase:firebase-auth")
 
+}
+
+// =======================================================================
+// FIX PARA AMBIGÜEDAD (Parte 2): Forzar al compilador a ignorar el error
+// =======================================================================
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Xlint:none")
 }

@@ -1169,8 +1169,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
 
-    if (selectedIndex != null)
+    if (selectedIndex != null) {
       setState(() => _selectedIconIndex = selectedIndex);
+    }
   }
 
   double _getAvatarSize(double w) =>

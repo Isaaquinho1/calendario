@@ -7,7 +7,6 @@ import 'models/task.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/notification_service.dart';
 import 'screens/splash_screen.dart';
-// 1. 🔑 IMPORTACIONES AÑADIDAS
 import 'package:provider/provider.dart';
 import 'notifiers/theme_notifier.dart'; // 👈 Necesitarás crear este archivo
 
