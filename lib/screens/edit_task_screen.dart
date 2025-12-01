@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 import '../utils/notification_service.dart';
-import 'package:audioplayers/audioplayers.dart'; // Importar audioplayers
+import 'package:audioplayers/audioplayers.dart';
 
 class EditTaskScreen extends StatefulWidget {
   final Task task;
@@ -32,9 +32,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   late TimeOfDay _selectedTime;
   late int _selectedReminderMinutes;
   late String _selectedAlarmTone;
+
   late List<bool> _selectedDays;
 
-  final AudioPlayer _audioPlayer = AudioPlayer(); // Instancia de AudioPlayer
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   final List<String> _dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
@@ -42,7 +43,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   // ignore: unused_field
   final bool _showCustomInput = false;
 
-  // Opciones de Recordatorio con minutos
+  // Opciones de Recordatorio
   final List<Map<String, dynamic>> _reminderOptions = [
     {'minutes': 0, 'text': 'Ninguno'},
     {'minutes': 5, 'text': '5 minutos antes'},
@@ -56,14 +57,13 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     {'minutes': -1, 'text': 'Personalizado'},
   ];
 
-  // ✅ CORREGIDO: Opciones de tonos de alarma (en minúsculas y con tus nombres)
   final List<Map<String, dynamic>> _alarmToneOptions = [
     {
       'value': 'tono_1',
       'text': 'Tono Clásico',
       'icon': Icons.music_note,
       'color': Colors.blue,
-      'sound': 'sounds/classic_tone.mp3', // Revisa esta ruta
+      'sound': 'sounds/classic_tone.mp3',
     },
     {
       'value': 'tono_2',
@@ -97,7 +97,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     _selectedReminderMinutes = widget.task.reminderMinutes;
     _selectedAlarmTone = widget.task.alarmTone;
 
-    // Asegurarse de que el tono seleccionado sea válido
     if (!_alarmToneOptions.any((tone) => tone['value'] == _selectedAlarmTone)) {
       _selectedAlarmTone = _alarmToneOptions[0]['value'];
     }
@@ -122,20 +121,32 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     _noteController = TextEditingController(text: initialNote);
     _categoryController = TextEditingController(text: initialCategory);
 
-    // Parsear repetición
+    // Inicializar días seleccionados
     _selectedDays = List.filled(7, false);
-    final String repetition = widget.task.repetitionFrequency;
-    if (repetition == 'Diariamente') {
-      _selectedDays = List.filled(7, true);
-    } else if (repetition == 'Entre semana') {
-      _selectedDays = [true, true, true, true, true, false, false];
-    } else if (repetition == 'Fines de semana') {
-      _selectedDays = [false, false, false, false, false, true, true];
-    } else if (repetition.startsWith('Semanal: ')) {
-      final days = repetition.replaceFirst('Semanal: ', '').split(', ');
-      for (var day in days) {
-        final index = _dayNames.indexOf(day);
-        if (index != -1) _selectedDays[index] = true;
+
+    // 1. Intentar leer la lista de enteros (formato nuevo)
+    // ignore: unnecessary_null_comparison
+    if (widget.task.repeatDays != null && widget.task.repeatDays.isNotEmpty) {
+      for (int day in widget.task.repeatDays) {
+        if (day >= 1 && day <= 7) {
+          _selectedDays[day - 1] = true;
+        }
+      }
+    } else {
+      // 2. Fallback al formato antiguo (string)
+      final String repetition = widget.task.repetitionFrequency;
+      if (repetition == 'Diariamente') {
+        _selectedDays = List.filled(7, true);
+      } else if (repetition == 'Entre semana') {
+        _selectedDays = [true, true, true, true, true, false, false];
+      } else if (repetition == 'Fines de semana') {
+        _selectedDays = [false, false, false, false, false, true, true];
+      } else if (repetition.startsWith('Semanal: ')) {
+        final days = repetition.replaceFirst('Semanal: ', '').split(', ');
+        for (var day in days) {
+          final index = _dayNames.indexOf(day);
+          if (index != -1) _selectedDays[index] = true;
+        }
       }
     }
   }
@@ -156,9 +167,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(
-        Duration(days: 365),
-      ), // Permitir fechas pasadas para editar
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime(2101),
       locale: const Locale('es', 'ES'),
       builder: (context, child) {
@@ -181,7 +190,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     }
   }
 
-  // ✅ CORREGIDO: Usamos la misma lógica del selector de 'add_task'
   Future<void> _selectTime(BuildContext context) async {
     int tempHour24 = _selectedTime.hour;
     int tempMinute = _selectedTime.minute;
@@ -203,15 +211,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * 0.5,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
-                  // Header
                   Container(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     decoration: BoxDecoration(
@@ -243,13 +248,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ],
                     ),
                   ),
-
-                  // Selectores deslizables
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Horas (1-12)
                         SizedBox(
                           width: screenWidth * 0.25,
                           child: CupertinoPicker(
@@ -285,7 +287,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             ),
                           ),
                         ),
-
                         Text(
                           ':',
                           style: TextStyle(
@@ -294,8 +295,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                        // Minutos
                         SizedBox(
                           width: screenWidth * 0.25,
                           child: CupertinoPicker(
@@ -323,8 +322,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             ),
                           ),
                         ),
-
-                        // AM/PM
                         SizedBox(
                           width: screenWidth * 0.25,
                           child: CupertinoPicker(
@@ -337,10 +334,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                               setModalState(() {
                                 isPM = index == 1;
                                 int currentDisplayHour = tempHour24 % 12;
-                                if (currentDisplayHour == 0) {
+                                if (currentDisplayHour == 0)
+                                  // ignore: curly_braces_in_flow_control_structures
                                   currentDisplayHour = 12;
-                                }
-
                                 if (isPM) {
                                   tempHour24 = (currentDisplayHour == 12)
                                       ? 12
@@ -377,8 +373,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ],
                     ),
                   ),
-
-                  // Botones
                   Padding(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     child: Row(
@@ -393,7 +387,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                side: BorderSide(color: primaryColor),
+                                side: const BorderSide(color: primaryColor),
                               ),
                             ),
                             onPressed: () => Navigator.pop(context),
@@ -463,7 +457,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     int tempSelectedMinutes = _selectedReminderMinutes;
     bool showCustomInput = false;
 
-    // Verificar si el valor actual es "personalizado"
     if (!_reminderOptions.any((opt) => opt['minutes'] == tempSelectedMinutes) &&
         tempSelectedMinutes != 0) {
       showCustomInput = true;
@@ -483,15 +476,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * (showCustomInput ? 0.5 : 0.6),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
-                  // Header
                   Container(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     decoration: BoxDecoration(
@@ -525,9 +515,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ],
                     ),
                   ),
-
                   if (showCustomInput) ...[
-                    // Input personalizado
                     Padding(
                       padding: EdgeInsets.all(isSmallScreen ? 20 : 25),
                       child: Column(
@@ -539,7 +527,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                               fontSize: isSmallScreen ? 16 : 18,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           TextField(
                             controller: _customMinutesController,
                             keyboardType: TextInputType.number,
@@ -557,7 +545,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Text(
                             'Nota: Ingresa solo números (mínimo 1 minuto)',
                             style: TextStyle(
@@ -570,7 +558,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ),
                     ),
                   ] else ...[
-                    // Selector deslizable
                     Expanded(
                       child: CupertinoPicker(
                         scrollController: FixedExtentScrollController(
@@ -619,8 +606,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ),
                     ),
                   ],
-
-                  // Botones
                   Padding(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     child: Row(
@@ -636,7 +621,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
-                                  side: BorderSide(color: primaryColor),
+                                  side: const BorderSide(color: primaryColor),
                                 ),
                               ),
                               onPressed: () {
@@ -666,7 +651,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
-                                  side: BorderSide(color: primaryColor),
+                                  side: const BorderSide(color: primaryColor),
                                 ),
                               ),
                               onPressed: () => Navigator.pop(context),
@@ -681,8 +666,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                           ),
                           SizedBox(width: isSmallScreen ? 10 : 15),
                         ],
-
-                        // Botón Aceptar
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -758,15 +741,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * 0.7,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
-                  // Header
                   Container(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     decoration: BoxDecoration(
@@ -798,8 +778,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ],
                     ),
                   ),
-
-                  // Instrucción
                   Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: isSmallScreen ? 16 : 20,
@@ -814,8 +792,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       ),
                     ),
                   ),
-
-                  // Lista deslizable de tonos
                   Expanded(
                     child: ListView.builder(
                       padding: EdgeInsets.symmetric(
@@ -841,6 +817,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             leading: Container(
                               padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
                               decoration: BoxDecoration(
+                                // ignore: deprecated_member_use
                                 color: tone['color'].withOpacity(0.2),
                                 shape: BoxShape.circle,
                               ),
@@ -889,13 +866,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       },
                     ),
                   ),
-
-                  // Botones
                   Padding(
                     padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                     child: Row(
                       children: [
-                        // Botón Cancelar
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -906,7 +880,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                side: BorderSide(color: primaryColor),
+                                side: const BorderSide(color: primaryColor),
                               ),
                             ),
                             onPressed: () {
@@ -922,10 +896,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             ),
                           ),
                         ),
-
                         SizedBox(width: isSmallScreen ? 10 : 15),
-
-                        // Botón Aceptar
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -972,12 +943,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     if (_selectedReminderMinutes == 0) {
       return 'Ninguno';
     }
-
     final predefinedOption = _reminderOptions.firstWhere(
       (option) => option['minutes'] == _selectedReminderMinutes,
       orElse: () => {'text': 'Personalizado'},
     );
-
     if (predefinedOption['text'] != 'Personalizado') {
       return predefinedOption['text'];
     } else {
@@ -1014,7 +983,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         selectedCount++;
       }
     }
-
     if (selectedCount == 0) {
       return 'Ninguno';
     } else if (selectedCount == 7) {
@@ -1028,27 +996,21 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     }
   }
 
-  // 1. 🔑 NUEVA FUNCIÓN PARA EL DIÁLOGO DE ÉXITO DE EDICIÓN
   Future<void> _showUpdateSuccessDialog(Task updatedTask) async {
-    // Guardamos el Navigator ANTES de mostrar el diálogo
     final navigator = Navigator.of(context);
-
     await showDialog(
       context: context,
-      barrierDismissible: false, // El usuario no puede cerrarlo
+      barrierDismissible: false,
       builder: (dialogContext) {
-        // Programamos el cierre automático
         Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
           if (mounted) {
             // ignore: use_build_context_synchronously
-            Navigator.pop(dialogContext); // Cierra el diálogo
-            // Devuelve el mapa que home_screen espera
+            Navigator.pop(dialogContext);
             navigator.pop({'task': updatedTask, 'key': widget.taskKey});
           }
         });
-
         return Dialog(
-          backgroundColor: cardColor, // Usando tu color de tema
+          backgroundColor: cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -1057,10 +1019,8 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 1. LA IMAGEN
-                // ‼️ Asegúrate de tener 'assets/alegre.svg' en tu pubspec.yaml
                 SvgPicture.asset(
-                  'assets/foquito.svg', // ¡Puedes cambiarla si quieres!
+                  'assets/foquito.svg',
                   height: 120,
                   placeholderBuilder: (context) => const Icon(
                     Icons.check_circle_outline,
@@ -1069,12 +1029,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // 2. EL TEXTO
                 const Text(
-                  '¡Tarea Editada!', // 🔑 TEXTO CAMBIADO
+                  '¡Tarea Editada!',
                   style: TextStyle(
-                    color: darkTextColor, // Usando tu color
+                    color: darkTextColor,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1083,10 +1041,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 const SizedBox(height: 10),
                 Text(
                   '"${updatedTask.title}"',
-                  style: const TextStyle(
-                    color: textColor, // Usando tu color
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: textColor, fontSize: 16),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1099,7 +1054,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
   }
 
-  // ✅✅✅ FUNCIÓN _updateTask COMPLETAMENTE CORREGIDA ✅✅✅
   Future<void> _updateTask() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1110,11 +1064,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       return;
     }
 
-    // Usamos la fecha y hora seleccionadas
     final updatedDueDate = _selectedDate;
     final updatedTime = _selectedTime;
 
-    // Verificamos si la fecha/hora es en el pasado
     final scheduledDateTime = DateTime(
       updatedDueDate.year,
       updatedDueDate.month,
@@ -1141,52 +1093,40 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           "Categoría: ${_categoryController.text}\n\n${_noteController.text}";
     }
 
-    final String repetition = _getRepetitionString();
+    List<int> daysToRepeat = [];
+    for (int i = 0; i < 7; i++) {
+      if (_selectedDays[i]) {
+        daysToRepeat.add(i + 1);
+      }
+    }
 
-    // 1. Crear tarea actualizada con el modelo Task corregido
     final updatedTask = Task(
       title: _titleController.text,
       note: note,
       dueDate: updatedDueDate,
       color: widget.task.color,
       isCompleted: widget.task.isCompleted,
-      // ❌ 'reminderInterval' ELIMINADO
-      repetitionFrequency: repetition,
+      repetitionFrequency: _getRepetitionString(),
       reminderMinutes: _selectedReminderMinutes,
-      timeHour: updatedTime.hour, // Hora correcta
-      timeMinute: updatedTime.minute, // Minuto correcto
-      alarmTone: _selectedAlarmTone, // Tono correcto
-      key: widget.task.key, // Mantener la key
+      timeHour: updatedTime.hour,
+      timeMinute: updatedTime.minute,
+      alarmTone: _selectedAlarmTone,
+      key: widget.task.key,
+      repeatDays: daysToRepeat,
     );
 
-    // 2. Actualizar en Hive
-    // 🔑 IMPORTANTE: Abrir la caja correcta. Asumo que es 'tasks'
-    // Si usas cajas por usuario, debes ajustar esto como en add_task_screen
-    final Box<Task> taskBox = Hive.box<Task>('tasks');
+    final Box<Task> taskBox;
+    if (Hive.isBoxOpen('tasks')) {
+      taskBox = Hive.box<Task>('tasks');
+    } else {
+      taskBox = await Hive.openBox<Task>('tasks');
+    }
+
     await taskBox.put(widget.taskKey, updatedTask);
 
-    // 3. Cancelar alarmas antiguas y programar nuevas
     await NotificationService.cancelTaskNotifications(widget.task);
     await NotificationService.scheduleTaskNotifications(updatedTask);
 
-    // 2. 🔑 ¡MODIFICACIÓN AQUÍ!
-    // Ya no usamos el SnackBar.
-    // -----------------------------------------------------
-    // ignore: use_build_context_synchronously
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(
-    //     content: Text('Tarea "${updatedTask.title}" actualizada'),
-    //     backgroundColor: Colors.green,
-    //     duration: const Duration(seconds: 3),
-    //   ),
-    // );
-    //
-    // ignore: use_build_context_synchronously
-    // Navigator.pop(context, {'task': updatedTask, 'key': widget.taskKey});
-    // -----------------------------------------------------
-
-    // Llamamos a nuestro nuevo diálogo.
-    // Este diálogo se encargará de cerrar la pantalla.
     if (!mounted) return;
     await _showUpdateSuccessDialog(updatedTask);
   }
@@ -1254,7 +1194,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // Imagen Remy
               Center(
                 child: SizedBox(
                   height: screenHeight * 0.12,
@@ -1262,12 +1201,15 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   child: SvgPicture.asset(
                     'assets/timido.svg',
                     fit: BoxFit.contain,
+                    placeholderBuilder: (context) => const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
               SizedBox(height: screenHeight * 0.025),
-
-              // Título "Editar Tarea"
               Center(
                 child: Text(
                   'Editar Tarea',
@@ -1283,8 +1225,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.035),
-
-              // 1. CAMPOS DE TEXTO
               _buildCombinedInputCard(
                 titleController: _titleController,
                 noteController: _noteController,
@@ -1292,8 +1232,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 isSmallScreen: isSmallScreen,
               ),
               SizedBox(height: screenHeight * 0.025),
-
-              // 2. SELECTOR DE FECHA
               _buildSelectorCard(
                 title: 'Fecha',
                 value: DateFormat('dd MMMM, yyyy', 'es').format(_selectedDate),
@@ -1305,8 +1243,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 isSmallScreen: isSmallScreen,
               ),
               SizedBox(height: screenHeight * 0.018),
-
-              // 3. SELECTOR DE HORA
               _buildSelectorCard(
                 title: 'Hora',
                 value: _selectedTime.format(context),
@@ -1318,8 +1254,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 isSmallScreen: isSmallScreen,
               ),
               SizedBox(height: screenHeight * 0.018),
-
-              // 4. SELECTOR DE RECORDAR - ACTUALIZADO
               _buildSelectorCard(
                 title: 'Recordar',
                 value: _getSelectedReminderText(),
@@ -1331,8 +1265,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 isSmallScreen: isSmallScreen,
               ),
               SizedBox(height: screenHeight * 0.012),
-
-              // Información de recordatorio
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: isSmallScreen ? 10.0 : 14.0,
@@ -1347,8 +1279,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.018),
-
-              // 5. SELECTOR DE TONO DE ALARMA
               _buildSelectorCard(
                 title: 'Tono de Alarma',
                 value: _getSelectedAlarmToneText(),
@@ -1360,8 +1290,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 isSmallScreen: isSmallScreen,
               ),
               SizedBox(height: screenHeight * 0.012),
-
-              // Información del tono de alarma
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: isSmallScreen ? 10.0 : 14.0,
@@ -1376,12 +1304,8 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.018),
-
-              // 6. SELECTOR DE REPETIR
               _buildRepetitionSelector(isSmallScreen: isSmallScreen),
               SizedBox(height: screenHeight * 0.025),
-
-              // 7. SELECTOR DE CATEGORÍA
               _buildCategoryInput(
                 categoryController: _categoryController,
                 cardColor: whiteCardColor,
@@ -1395,7 +1319,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
   }
 
-  // --- Widgets Auxiliares (ACTUALIZADOS) ---
+  // --- Widgets Auxiliares Modificados ---
 
   Widget _buildSelectorCard({
     required String title,
@@ -1458,6 +1382,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
   }
 
+  // 🔴 AQUÍ ESTÁ EL CAMBIO CLAVE PARA RESPONSIVIDAD 🔴
   Widget _buildRepetitionSelector({required bool isSmallScreen}) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1471,7 +1396,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título
           Row(
             children: [
               Icon(
@@ -1491,8 +1415,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             ],
           ),
           SizedBox(height: isSmallScreen ? 14 : 18),
-
-          // Botones de Atajo
           Wrap(
             spacing: isSmallScreen ? 8 : 12,
             runSpacing: 10,
@@ -1529,39 +1451,55 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             ],
           ),
           SizedBox(height: isSmallScreen ? 10 : 14),
-
-          // Divisor
           Divider(color: secondaryTextColor.withAlpha(76), height: 22),
           SizedBox(height: isSmallScreen ? 10 : 14),
 
-          // Selectores de Días
+          // 🔴 USO DE WRAP EN LUGAR DE ROW/TOGGLEBUTTONS 🔴
           Center(
-            child: ToggleButtons(
-              isSelected: _selectedDays,
-              onPressed: (int index) {
-                setState(() {
-                  _selectedDays[index] = !_selectedDays[index];
-                });
-              },
-              fillColor: primaryColor.withAlpha(200),
-              selectedColor: Colors.white,
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(12),
-              constraints: BoxConstraints(
-                minWidth: isSmallScreen ? 38 : 44,
-                minHeight: isSmallScreen ? 38 : 44,
-              ),
-              children: _dayNames
-                  .map(
-                    (day) => Text(
-                      day,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isSmallScreen ? 13 : 15,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: isSmallScreen
+                  ? 8.0
+                  : 12.0, // Espacio horizontal entre botones
+              runSpacing: 10.0, // Espacio vertical si baja a la siguiente línea
+              children: List.generate(7, (index) {
+                final isSelected = _selectedDays[index];
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedDays[index] = !_selectedDays[index];
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: isSmallScreen ? 38 : 44, // Ancho fijo por botón
+                    height: isSmallScreen ? 38 : 44, // Alto fijo por botón
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? primaryColor
+                          : primaryColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ), // Bordes redondeados
+                      border: Border.all(
+                        color: isSelected ? primaryColor : Colors.transparent,
+                        width: 2,
                       ),
                     ),
-                  )
-                  .toList(),
+                    child: Center(
+                      child: Text(
+                        _dayNames[index],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isSmallScreen ? 14 : 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ],
@@ -1607,7 +1545,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       fontSize: isSmallScreen ? 15 : 17,
       fontWeight: FontWeight.w700,
     );
-
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmallScreen ? 18 : 22,
@@ -1620,7 +1557,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título
           Text('Título', style: labelStyle),
           TextField(
             controller: titleController,
@@ -1637,11 +1573,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               contentPadding: EdgeInsets.only(top: 8, bottom: 8),
             ),
           ),
-
-          // Línea divisoria
           Divider(color: secondaryTextColor.withAlpha(76), height: 22),
-
-          // Nota/Descripción
           Text('Descripción', style: labelStyle),
           TextField(
             controller: noteController,
@@ -1673,7 +1605,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       fontSize: isSmallScreen ? 15 : 17,
       fontWeight: FontWeight.w700,
     );
-
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmallScreen ? 18 : 22,

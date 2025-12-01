@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:calendario/pages/auth_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:permission_handler/permission_handler.dart'; 
+import 'package:permission_handler/permission_handler.dart';
 // Importar servicios del sistema operativo para manejo de estados
 import 'dart:io' show Platform;
 import 'dart:async'; // Para Completer
@@ -15,12 +15,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with WidgetsBindingObserver {
-  
+class _SplashScreenState extends State<SplashScreen>
+    with WidgetsBindingObserver {
   // 🔑 Color principal: #72C1F3
   static const Color primarySplashColor = Color(0xFF72C1F3);
   static const String remiAssetPath = 'assets/cara_remind.svg';
-  
+
   // Flag para saber si estamos esperando el permiso de alarma
   bool _waitingForAlarmPermission = false;
   // Completer para manejar la pausa y reanudación de la aplicación
@@ -60,17 +60,16 @@ class _SplashScreenState extends State<SplashScreen> with WidgetsBindingObserver
     // 2. SOLICITAR PERMISO DE ALARMA EXACTA (Crucial para Android 12+)
     if (Platform.isAndroid) {
       PermissionStatus status = await Permission.scheduleExactAlarm.status;
-      
+
       // Si el permiso no ha sido concedido, lo solicitamos.
       if (!status.isGranted) {
-        
         // Marcamos que estamos esperando la respuesta.
         setState(() => _waitingForAlarmPermission = true);
         _resumedCompleter = Completer<void>();
-        
+
         // Solicitar y esperar que el usuario regrese
         await Permission.scheduleExactAlarm.request();
-        
+
         // Esperamos a que didChangeAppLifecycleState complete el completer
         // Esto ocurrirá cuando el usuario regrese de la pantalla de ajustes de Alarmas.
         await _resumedCompleter!.future;
@@ -90,7 +89,6 @@ class _SplashScreenState extends State<SplashScreen> with WidgetsBindingObserver
         _showPermissionDeniedMessage();
       }
     }
-
 
     // Espera 3 segundos (para el efecto visual de Duolingo)
     await Future.delayed(const Duration(seconds: 3));
@@ -163,12 +161,13 @@ class _SplashScreenState extends State<SplashScreen> with WidgetsBindingObserver
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
-            
+
             if (_waitingForAlarmPermission)
               Padding(
                 padding: const EdgeInsets.only(top: 20.0),
                 child: Text(
                   'Activando permisos de alarma...',
+                  // ignore: deprecated_member_use
                   style: TextStyle(color: Colors.white.withOpacity(0.8)),
                 ),
               ),

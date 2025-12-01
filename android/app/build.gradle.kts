@@ -25,15 +25,15 @@ android {
     // 🔑 1. HABILITAR SOPORTE DE COMPILACIÓN DE JAVA 8 Y CORE DESUGARING
     compileOptions {
         // Asegura la compatibilidad con Java 8
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         
         // HABILITAR CORE DESUGARING (Requerido por flutter_local_notifications)
         isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString() 
+        jvmTarget = JavaVersion.VERSION_17.toString() 
     }
 
     defaultConfig {

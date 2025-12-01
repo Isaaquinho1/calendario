@@ -6,7 +6,7 @@ import '../models/task.dart';
 import 'add_task_screen.dart';
 import 'edit_task_screen.dart';
 import 'profile_screen.dart';
-import 'package:intl/intl.dart'; // Import intl para formatear
+import 'package:intl/intl.dart';
 
 // Enum para el filtro de estado
 enum Filter { pending, completed }
@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Box<Task> _taskBox;
 
   // Variables de estado
+  // ignore: unused_field
   late String _userName;
   Filter _activeFilter = Filter.pending;
   String? _selectedCategory;
@@ -66,8 +67,42 @@ class _HomeScreenState extends State<HomeScreen> {
     _taskBox.put(key, taskToUpdate);
   }
 
+  // ✅ FUNCIÓN 1: ELIMINAR CON DESHACER
   void _deleteTask(dynamic key, Task deletedTask) {
+    // 1. Eliminar de la BD
     _taskBox.delete(key);
+
+    // 2. Ocultar mensajes previos para que no se amontonen
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    // 3. Mostrar SnackBar con opción de deshacer
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Tarea eliminada',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.grey[850],
+        duration: const Duration(seconds: 4), // Tiempo disponible para deshacer
+        action: SnackBarAction(
+          label: 'DESHACER',
+          textColor: Colors.blueAccent, // Color del botón deshacer
+          onPressed: () {
+            // 4. RESTAURAR: Volvemos a guardar la tarea con su misma llave original
+            _taskBox.put(key, deletedTask);
+
+            // 5. Mensaje de confirmación
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Tarea devuelta! 🫡'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _editTask(dynamic key, Task task) async {
@@ -90,13 +125,120 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String getPersonalizedGreeting() {
+  // ✅ FUNCIÓN 2: MOSTRAR DETALLES (VENTANA EMERGENTE)
+  void _showTaskDetails(BuildContext context, Task task) {
+    // Separamos la categoría de la nota para mostrarlo ordenado
+    String category = 'Sin categoría';
+    String description = task.note;
+
+    if (task.note.startsWith('Categoría: ')) {
+      final parts = task.note.split('\n');
+      category = parts.first.replaceFirst('Categoría: ', '').trim();
+      if (parts.length > 1) {
+        description = parts.sublist(1).join('\n').trim();
+      } else {
+        description = 'Sin descripción adicional.';
+      }
+    }
+
+    final String timeString =
+        '${task.timeHour.toString().padLeft(2, '0')}:${task.timeMinute.toString().padLeft(2, '0')}';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          task.title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hora
+            Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.blueAccent),
+                const SizedBox(width: 10),
+                Text(
+                  "Hora: $timeString",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            // Categoría
+            Row(
+              children: [
+                const Icon(Icons.label_outline, color: Colors.orange),
+                const SizedBox(width: 10),
+                Text(
+                  "Categoría: $category",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 30, thickness: 1),
+            // Descripción
+            const Text(
+              "Descripción:",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                description.isEmpty ? "Sin descripción." : description,
+                style: const TextStyle(fontSize: 15, height: 1.4),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 55, 78, 107),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 10,
+                ),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text(
+                "Cerrar",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String getPersonalizedGreeting(String name) {
     final List<String> greetings = [
-      '¡Hola, $_userName! 👋 ¿Listo para conquistar el día?',
-      '¡Excelente, $_userName! Vamos por esas metas. 🚀',
-      'A trabajar, $_userName. ¡Hoy es tu día! 💪',
-      '¡Que gusto verte, $_userName! Tienes tareas importantes. 😉',
-      '¡El tiempo es oro, $_userName! A darle con todo. ⏰',
+      '¡Hola, $name! 👋 ¿Listo para conquistar el día?',
+      '¡Excelente, $name! Vamos por esas metas. 🚀',
+      'A trabajar, $name. ¡Hoy es tu día! 💪',
+      '¡Que gusto verte, $name! Tienes tareas importantes. 😉',
+      '¡El tiempo es oro, $name! A darle con todo. ⏰',
     ];
     return greetings[DateTime.now().hour % greetings.length];
   }
@@ -124,103 +266,96 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProfileMenu(BuildContext context, Color iconColor) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final String name = _userName;
-    final String email = currentUser?.email ?? 'Sin Email';
+    return ValueListenableBuilder(
+      valueListenable: _userBox.listenable(keys: ['name']),
+      builder: (context, Box box, _) {
+        final String name = box.get('name', defaultValue: 'Usuario');
+        final currentUser = FirebaseAuth.instance.currentUser;
+        final String email = currentUser?.email ?? 'Sin Email';
 
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.menu, color: iconColor),
-      onSelected: (value) async {
-        final navigator = Navigator.of(context);
+        return PopupMenuButton<String>(
+          icon: Icon(Icons.menu, color: iconColor),
+          onSelected: (value) async {
+            final navigator = Navigator.of(context);
 
-        if (value == 'profile') {
-          final bool? profileWasUpdated = await navigator.push<bool>(
-            MaterialPageRoute(
-              builder: (_) =>
-                  ProfileScreen(userBox: _userBox, taskBox: _taskBox),
+            if (value == 'profile') {
+              await navigator.push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ProfileScreen(userBox: _userBox, taskBox: _taskBox),
+                ),
+              );
+            } else if (value == 'logout') {
+              if (!mounted) return;
+
+              final messenger = ScaffoldMessenger.of(context);
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text("¡Nos vemos luego, $name!"),
+                  backgroundColor: Colors.blueAccent,
+                ),
+              );
+
+              await Future.delayed(const Duration(milliseconds: 1500));
+              await FirebaseAuth.instance.signOut();
+              await _taskBox.close();
+
+              if (!mounted) return;
+              navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem(
+              enabled: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                  Text(
+                    email,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color.fromARGB(255, 33, 33, 33),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
-
-          if (!mounted) return;
-
-          if (profileWasUpdated == true) {
-            setState(() {
-              _userName = _userBox.get('name', defaultValue: 'Usuario');
-            });
-          }
-        } else if (value == 'logout') {
-          if (!mounted) return;
-
-          final messenger = ScaffoldMessenger.of(context);
-
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text("¡Nos vemos luego, $_userName!"),
-              backgroundColor: Colors.blueAccent,
+            const PopupMenuDivider(),
+            const PopupMenuItem<String>(
+              value: 'profile',
+              child: Row(
+                children: [
+                  Icon(Icons.person_outline),
+                  SizedBox(width: 10),
+                  Text('Perfil'),
+                ],
+              ),
             ),
-          );
-
-          await Future.delayed(const Duration(milliseconds: 1500));
-          await FirebaseAuth.instance.signOut();
-
-          await _taskBox.close(); // Cierra la caja de tareas del usuario
-
-          if (!mounted) return;
-
-          navigator.pushNamedAndRemoveUntil('/login', (route) => false);
-        }
+            const PopupMenuItem<String>(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(Icons.logout, color: Colors.red),
+                  SizedBox(width: 10),
+                  Text('Cerrar Sesión'),
+                ],
+              ),
+            ),
+          ],
+        );
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
-              ),
-              Text(
-                email,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color.fromARGB(255, 33, 33, 33),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem<String>(
-          value: 'profile',
-          child: Row(
-            children: [
-              Icon(Icons.person_outline),
-              SizedBox(width: 10),
-              Text('Perfil'),
-            ],
-          ),
-        ),
-        const PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: [
-              Icon(Icons.logout, color: Colors.red),
-              SizedBox(width: 10),
-              Text('Cerrar Sesión'),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Colores del tema
     const Color primaryColor = Color.fromARGB(255, 55, 78, 107);
     const Color backgroundColor = Color.fromARGB(255, 232, 232, 232);
     const Color cardColor = Color.fromARGB(255, 212, 212, 212);
@@ -228,7 +363,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const Color secondaryTextColor = Color.fromARGB(255, 55, 78, 107);
     const Color fabColor = Colors.blueAccent;
 
-    // Detección de tamaño de pantalla
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenWidth < 360;
@@ -237,7 +371,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return FutureBuilder<void>(
       future: _initBoxesFuture,
       builder: (context, snapshot) {
-        // Estado de carga
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: backgroundColor,
@@ -245,7 +378,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        // Estado de error
         if (snapshot.hasError) {
           return Scaffold(
             backgroundColor: backgroundColor,
@@ -265,11 +397,9 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        // Estado de éxito
         return ValueListenableBuilder(
           valueListenable: _taskBox.listenable(),
           builder: (context, Box<Task> box, _) {
-            // Calcular estado
             final Map<dynamic, Task> taskMap = box.toMap();
             final List<Task> allTasks = taskMap.values.toList();
             final bool isTotalyEmpty = allTasks.isEmpty;
@@ -328,7 +458,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? const SizedBox.shrink()
                     : Padding(
                         padding: EdgeInsets.all(isSmallScreen ? 4.0 : 8.0),
-                        // child: _buildRemyLogo(isSmallScreen, screenHeight),
                       ),
                 actions: [_buildProfileMenu(context, primaryColor)],
               ),
@@ -337,17 +466,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: isSmallScreen ? 60.0 : 70.0,
                 child: FloatingActionButton(
                   onPressed: () async {
-                    // add_task_screen se encarga de añadir a Hive
-                    // y nos devuelve la tarea (por si la necesitamos)
-                    // El ValueListenableBuilder se encargará de actualizar la UI
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AddTaskScreen(),
                       ),
                     );
-                    // El código de "if (newTask is Task)" se elimina
-                    // porque AddTaskScreen ya lo guarda en la caja correcta.
                   },
                   backgroundColor: fabColor,
                   foregroundColor: Colors.white,
@@ -365,24 +489,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      // Saludo
-                      Text(
-                        getPersonalizedGreeting(),
-                        style: TextStyle(
-                          fontSize: isSmallScreen
-                              ? 20
-                              : isLargeScreen
-                              ? 26
-                              : 24,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
+                      ValueListenableBuilder(
+                        valueListenable: _userBox.listenable(keys: ['name']),
+                        builder: (context, Box box, _) {
+                          final currentName = box.get(
+                            'name',
+                            defaultValue: 'Usuario',
+                          );
+                          return Text(
+                            getPersonalizedGreeting(currentName),
+                            style: TextStyle(
+                              fontSize: isSmallScreen
+                                  ? 20
+                                  : isLargeScreen
+                                  ? 26
+                                  : 24,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          );
+                        },
                       ),
+
                       SizedBox(height: screenHeight * 0.01),
 
-                      // Fecha
                       Text(
-                        // Usamos DateFormat para una fecha más legible
                         DateFormat(
                           'EEEE, dd MMMM, yyyy',
                           'es_ES',
@@ -394,7 +525,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.03),
 
-                      // Tarjetas de métricas
                       _buildMetricCards(
                         context,
                         primaryColor,
@@ -406,7 +536,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.03),
 
-                      // Título "Mis Tareas"
                       Text(
                         'Mis Tareas',
                         style: TextStyle(
@@ -417,7 +546,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.02),
 
-                      // Filtros de categoría
                       _buildCategoryFilters(
                         categoriesForCurrentFilter,
                         primaryColor,
@@ -425,7 +553,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(height: screenHeight * 0.02),
 
-                      // Lista de tareas
                       Expanded(
                         child: (isTotalyEmpty || isFilteredListEmpty)
                             ? Center(
@@ -455,11 +582,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemBuilder: (context, index) {
                                   final task = tasksToDisplay[index];
                                   final key = keysToDisplay[index];
+
+                                  // ✅ PASO 3: Pasamos el onTap para mostrar detalles
                                   return TaskCard(
                                     task: task,
                                     onToggle: () => _toggleTaskCompletion(key),
                                     onDelete: () => _deleteTask(key, task),
                                     onEdit: () => _editTask(key, task),
+                                    onTap: () => _showTaskDetails(
+                                      context,
+                                      task,
+                                    ), // <-- Click en tarjeta
                                     cardColor: cardColor,
                                     primaryColor: primaryColor,
                                     isSmallScreen: isSmallScreen,
@@ -478,13 +611,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- WIDGETS AUXILIARES RESPONSIVOS ---
+  // --- WIDGETS AUXILIARES ---
 
-  // Widget para el logo en estado vacío
   Widget _buildEmptyStateLogo(bool isSmallScreen, double screenHeight) {
     try {
       return SvgPicture.asset(
-        'assets/curioso.svg', // ⬅️ Revisa que esta ruta sea correcta
+        'assets/curioso.svg',
         height: screenHeight * 0.2,
         fit: BoxFit.contain,
         placeholderBuilder: (BuildContext context) => Container(
@@ -704,7 +836,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ------------------------------------------------------------------
-// WIDGET TASKCARD RESPONSIVO (CORREGIDO)
+// ✅ WIDGET TASKCARD ACTUALIZADO (Con detector de clicks)
 // ------------------------------------------------------------------
 
 class TaskCard extends StatelessWidget {
@@ -712,6 +844,8 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final VoidCallback onTap; // Callback para abrir detalles
+
   final Color cardColor;
   final Color primaryColor;
   final bool isSmallScreen;
@@ -722,6 +856,7 @@ class TaskCard extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     required this.onEdit,
+    required this.onTap, // Requerido ahora
     required this.cardColor,
     required this.primaryColor,
     this.isSmallScreen = false,
@@ -731,17 +866,12 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color textColor = Color.fromARGB(255, 0, 0, 0);
     const Color secondaryTextColor = Color.fromARGB(255, 0, 0, 0);
-
-    // Determinar el color de la barra lateral (¡función de ejemplo!)
-    // Asumiendo que Task tiene un campo 'color'
     final Color sideBarColor = task.isCompleted ? Colors.grey : (task.color);
 
     return Dismissible(
-      key: UniqueKey(), // Usa UniqueKey si la lista puede cambiar dinámicamente
+      key: UniqueKey(),
       direction: DismissDirection.endToStart,
-      onDismissed: (direction) {
-        onDelete();
-      },
+      onDismissed: (direction) => onDelete(),
       background: Container(
         color: Colors.red.shade700,
         alignment: Alignment.centerRight,
@@ -764,88 +894,90 @@ class TaskCard extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
+            // Barra lateral de color
             Container(
               width: 6.0,
               height: isSmallScreen ? 60.0 : 70.0,
               decoration: BoxDecoration(
-                color: sideBarColor, // Usamos el color determinado
+                color: sideBarColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15.0),
                   bottomLeft: Radius.circular(15.0),
                 ),
               ),
             ),
+
+            // ✅ CONTENIDO PRINCIPAL (Clickeable con InkWell)
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 10.0 : 12.0,
-                  vertical: isSmallScreen ? 6.0 : 8.0,
-                ),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: onToggle,
-                      child: Icon(
-                        task.isCompleted
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: task.isCompleted
-                            ? Colors.green
-                            : secondaryTextColor,
-                        size: isSmallScreen ? 24 : 28,
+              child: InkWell(
+                onTap: onTap, // Abre la ventana de detalles
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 10.0 : 12.0,
+                    vertical: isSmallScreen ? 6.0 : 8.0,
+                  ),
+                  child: Row(
+                    children: [
+                      // Checkbox (Botón independiente, no abre detalles)
+                      GestureDetector(
+                        onTap: onToggle,
+                        child: Icon(
+                          task.isCompleted
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color: task.isCompleted
+                              ? Colors.green
+                              : secondaryTextColor,
+                          size: isSmallScreen ? 24 : 28,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: isSmallScreen ? 10 : 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            task.title,
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 14 : 16,
-                              fontWeight: FontWeight.w600,
-                              decoration: task.isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                              color: textColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          SizedBox(height: isSmallScreen ? 2 : 4),
+                      SizedBox(width: isSmallScreen ? 10 : 12),
 
-                          // ===============================================
-                          // ✅✅✅ ¡AQUÍ ESTÁ LA CORRECCIÓN! ✅✅✅
-                          // ===============================================
-                          Text(
-                            // Leemos 'timeHour' y 'timeMinute' en lugar de 'dueDate'
-                            'Hora: ${task.timeHour.toString().padLeft(2, '0')}:${task.timeMinute.toString().padLeft(2, '0')}',
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 12 : 14,
-                              color: secondaryTextColor,
+                      // Textos (Título y Hora)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              task.title,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 14 : 16,
+                                fontWeight: FontWeight.w600,
+                                decoration: task.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                color: textColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          ),
+                            SizedBox(height: isSmallScreen ? 2 : 4),
+                            Text(
+                              'Hora: ${task.timeHour.toString().padLeft(2, '0')}:${task.timeMinute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 12 : 14,
+                                color: secondaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                          // ===============================================
-                          // FIN DE LA CORRECCIÓN
-                          // ===============================================
-                        ],
+                      // Botón Editar (Independiente)
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          color: primaryColor.withAlpha(204),
+                          size: isSmallScreen ? 20 : 22,
+                        ),
+                        onPressed: onEdit,
+                        tooltip: 'Editar Tarea',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        color: primaryColor.withAlpha(204),
-                        size: isSmallScreen ? 20 : 22,
-                      ),
-                      onPressed: onEdit,
-                      tooltip: 'Editar Tarea',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

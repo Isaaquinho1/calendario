@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Importar Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/task.dart';
 import '../utils/notification_service.dart';
 
@@ -32,6 +32,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   // ignore: unused_field
   late bool _isPM;
 
+  // Lista de 7 boleanos (Lunes a Domingo)
   List<bool> _selectedDays = List.filled(7, false);
 
   // Opciones de Recordatorio con minutos
@@ -119,13 +120,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: const ColorScheme.dark(
               primary: Colors.white,
               onPrimary: Colors.black,
               surface: Colors.black,
               onSurface: Colors.white,
             ),
-            dialogTheme: DialogThemeData(backgroundColor: Colors.black),
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.black),
           ),
           child: child!,
         );
@@ -159,11 +160,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * 0.5,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
@@ -349,7 +348,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                side: BorderSide(color: primaryColor),
+                                side: const BorderSide(color: primaryColor),
                               ),
                             ),
                             onPressed: () => Navigator.pop(context),
@@ -429,11 +428,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * (showCustomInput ? 0.5 : 0.6),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
@@ -485,7 +482,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               fontSize: isSmallScreen ? 16 : 18,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           TextField(
                             controller: _customReminderController,
                             keyboardType: TextInputType.number,
@@ -503,7 +500,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Text(
                             'Nota: Ingresa solo números (mínimo 1 minuto)',
                             style: TextStyle(
@@ -537,13 +534,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             tempSelectedMinutes = selectedOption['minutes'];
                           }
                         },
-                        //
-                        //  INICIO DE LA CORRECCIÓN DE RECORDATORIOS DUPLICADOS
-                        //
                         children: _reminderOptions.map((option) {
                           return Center(
                             child: Text(
-                              option['text'], // Solo mostramos el texto principal
+                              option['text'],
                               style: TextStyle(
                                 color: textColor,
                                 fontSize: isSmallScreen ? 18 : 20,
@@ -552,9 +546,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             ),
                           );
                         }).toList(),
-                        //
-                        //  FIN DE LA CORRECCIÓN
-                        //
                       ),
                     ),
                   ],
@@ -575,7 +566,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
-                                  side: BorderSide(color: primaryColor),
+                                  side: const BorderSide(color: primaryColor),
                                 ),
                               ),
                               onPressed: () {
@@ -605,7 +596,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
-                                  side: BorderSide(color: primaryColor),
+                                  side: const BorderSide(color: primaryColor),
                                 ),
                               ),
                               onPressed: () => Navigator.pop(context),
@@ -697,11 +688,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           builder: (context, setModalState) {
             return Container(
               height: screenHeight * 0.7,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: cardColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
               ),
               child: Column(
                 children: [
@@ -780,6 +769,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             leading: Container(
                               padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
                               decoration: BoxDecoration(
+                                // ignore: deprecated_member_use
                                 color: tone['color'].withOpacity(0.2),
                                 shape: BoxShape.circle,
                               ),
@@ -844,7 +834,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
-                                side: BorderSide(color: primaryColor),
+                                side: const BorderSide(color: primaryColor),
                               ),
                             ),
                             onPressed: () {
@@ -904,7 +894,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  // --- Funciones de Ayuda (Están bien) ---
+  // --- Funciones de Ayuda ---
 
   String _getSelectedReminderText() {
     if (_selectedReminderMinutes == 0) {
@@ -964,26 +954,23 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  // 1. 🔑 ESTA ES LA NUEVA FUNCIÓN PARA MOSTRAR EL DIÁLOGO DE ÉXITO
   Future<void> _showSuccessDialog(Task taskWithKey) async {
-    // Guardamos el Navigator ANTES de mostrar el diálogo
-    // para poder cerrar la pantalla de "Agregar" después.
     final navigator = Navigator.of(context);
 
     await showDialog(
       context: context,
-      barrierDismissible: false, // El usuario no puede cerrarlo
+      barrierDismissible: false,
       builder: (dialogContext) {
-        // Programamos el cierre automático
         Future.delayed(const Duration(seconds: 2, milliseconds: 500), () {
           if (mounted) {
-            Navigator.pop(dialogContext); // Cierra el diálogo
-            navigator.pop(taskWithKey); // Cierra la pantalla de "Agregar"
+            // ignore: use_build_context_synchronously
+            Navigator.pop(dialogContext);
+            navigator.pop(taskWithKey);
           }
         });
 
         return Dialog(
-          backgroundColor: cardColor, // Usando tu color de tema
+          backgroundColor: cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -992,10 +979,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 1. LA IMAGEN (EXTERNA A LA CAJA DE TEXTO)
-                // ‼️ Asegúrate de tener 'assets/alegre.svg' en tu pubspec.yaml
                 SvgPicture.asset(
-                  'assets/foquito.svg', // ¡Puedes cambiar esto por 'feliz.svg' o la que quieras!
+                  'assets/foquito.svg',
                   height: 120,
                   placeholderBuilder: (context) => const Icon(
                     Icons.check_circle_outline,
@@ -1004,12 +989,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // 2. EL TEXTO (DENTRO DE SU "CAJA" DE DIÁLOGO)
                 const Text(
                   '¡Tarea Guardada!',
                   style: TextStyle(
-                    color: darkTextColor, // Usando tu color
+                    color: darkTextColor,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1018,10 +1001,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 const SizedBox(height: 10),
                 Text(
                   '"${taskWithKey.title}"',
-                  style: const TextStyle(
-                    color: textColor, // Usando tu color
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: textColor, fontSize: 16),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1034,6 +1014,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
+  // === GUARDAR TAREA ===
   Future<void> _saveTask() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1045,7 +1026,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       return;
     }
 
-    // Obtener el UID del usuario actual de Firebase
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1062,24 +1042,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final String userTaskBoxName = 'tasks_$uid';
 
     try {
-      final DateTime scheduledDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        _selectedTime.hour,
-        _selectedTime.minute,
-      );
-
-      if (scheduledDateTime.isBefore(
-        DateTime.now().subtract(const Duration(minutes: 1)),
-      )) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Oops! No puedes programar tareas en el pasado.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
+      // 1. Convertimos los booleanos visuales a una lista de enteros para el modelo
+      // (1 = Lunes, 7 = Domingo)
+      List<int> daysToRepeat = [];
+      for (int i = 0; i < 7; i++) {
+        if (_selectedDays[i]) {
+          daysToRepeat.add(i + 1);
+        }
       }
 
       String note = _noteController.text;
@@ -1098,21 +1067,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         timeMinute: _selectedTime.minute,
         alarmTone: _selectedAlarmTone,
         isCompleted: false,
+        // ✅ AQUÍ PASAMOS LA LISTA DE DÍAS QUE AGREGAMOS AL MODELO
+        repeatDays: daysToRepeat,
       );
 
-      // Abrir la caja específica del usuario y guardar
       final Box<Task> taskBox = await Hive.openBox<Task>(userTaskBoxName);
       final int key = await taskBox.add(newTask);
 
       final taskWithKey = newTask.copyWith(key: key);
       await taskBox.put(key, taskWithKey);
 
+      // Programar la notificación (ahora usa repeatDays internamente)
       await NotificationService.scheduleTaskNotifications(taskWithKey);
 
       if (!mounted) return;
       await _showSuccessDialog(taskWithKey);
-
-      //
     } catch (e) {
       // ignore: avoid_print
       print('Error al guardar tarea: $e');
@@ -1351,7 +1320,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
   // --- WIDGETS AUXILIARES ---
-  // (El resto de tus widgets auxiliares van aquí)
 
   Widget _buildSelectorCard({
     required String title,

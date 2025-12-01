@@ -27,13 +27,14 @@ class TaskAdapter extends TypeAdapter<Task> {
       timeMinute: fields[9] as int,
       alarmTone: fields[10] as String,
       key: fields[11] as int?,
+      repeatDays: (fields[12] as List).cast<int>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Task obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -55,7 +56,9 @@ class TaskAdapter extends TypeAdapter<Task> {
       ..writeByte(10)
       ..write(obj.alarmTone)
       ..writeByte(11)
-      ..write(obj.key);
+      ..write(obj.key)
+      ..writeByte(12)
+      ..write(obj.repeatDays);
   }
 
   @override

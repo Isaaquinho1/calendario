@@ -1008,6 +1008,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             boxShadow: [
               BoxShadow(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.05),
 
                 blurRadius: 5,

@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 part 'task.g.dart';
 
 @HiveType(typeId: 0)
-class Task {
+class Task extends HiveObject {
   @HiveField(0)
   final String title;
 
@@ -25,7 +25,7 @@ class Task {
   // final String reminderInterval;
 
   @HiveField(6)
-  final String repetitionFrequency;
+  final String repetitionFrequency; // 'None', 'Daily', etc.
 
   // ✅ ÚNICA FUENTE DE VERDAD para el recordatorio
   @HiveField(7)
@@ -40,8 +40,13 @@ class Task {
   @HiveField(10)
   final String alarmTone;
 
+  @override
   @HiveField(11)
   int? key;
+
+  // ✅ NUEVO CAMPO: Lista de días para repetir (1=Lunes, 7=Domingo)
+  @HiveField(12)
+  final List<int> repeatDays;
 
   Task({
     required this.title,
@@ -54,8 +59,9 @@ class Task {
     this.reminderMinutes = 0,
     required this.timeHour,
     required this.timeMinute,
-    this.alarmTone = 'tono_1', // ✅ CORREGIDO: Valor en minúscula
+    this.alarmTone = 'tono_1',
     this.key,
+    this.repeatDays = const [], // Por defecto vacío (sin repetición semanal)
     // ignore: deprecated_member_use
   }) : colorValue = color.value;
 
@@ -87,15 +93,15 @@ class Task {
 
   // --- Setters ---
 
+  // Nota: En HiveObject es mejor no usar setters para la key, Hive la maneja sola.
+  // Pero lo dejamos por compatibilidad con tu código actual.
   set setKey(int newKey) {
     key = newKey;
   }
 
   // --- Métodos Estáticos ---
 
-  // (Tus métodos estáticos reminderStringToMinutes, etc. se quedan igual, están perfectos)
   static int reminderStringToMinutes(String reminder) {
-    // ... tu código ...
     switch (reminder) {
       case '5 minutos antes':
         return 5;
@@ -119,7 +125,6 @@ class Task {
   }
 
   static String minutesToReminderString(int minutes) {
-    // ... tu código ...
     switch (minutes) {
       case 5:
         return '5 minutos antes';
@@ -143,7 +148,6 @@ class Task {
   }
 
   static String customMinutesToString(int minutes) {
-    // ... tu código ...
     if (minutes == 0) return 'Ninguno';
     if (minutes < 60) return '$minutes minutos antes';
     final hours = minutes ~/ 60;
@@ -170,6 +174,7 @@ class Task {
     int? timeMinute,
     String? alarmTone,
     int? key,
+    List<int>? repeatDays, // ✅ Agregado al copyWith
   }) {
     return Task(
       title: title ?? this.title,
@@ -184,11 +189,12 @@ class Task {
       timeMinute: timeMinute ?? this.timeMinute,
       alarmTone: alarmTone ?? this.alarmTone,
       key: key ?? this.key,
+      repeatDays: repeatDays ?? this.repeatDays, // ✅ Agregado
     );
   }
 
   @override
   String toString() {
-    return 'Task{title: $title, dueDate: $dueDate, time: $timeHour:$timeMinute, reminder: $reminderMinutes min, key: $key}';
+    return 'Task{title: $title, time: $timeHour:$timeMinute, repeat: $repeatDays, reminder: $reminderMinutes min}';
   }
 }
